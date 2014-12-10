@@ -1,0 +1,15 @@
+---
+title: "README"
+author: "Szymon Talaga"
+date: "10.12.2014"
+output: pdf_document
+---
+
+**[English follows]**
+
+Repozytorium zawiera dane, skrypty i własne funckje, które są niezbędne do zreplikowania wyników badań, które przeprowadziłem w ramach swojej pracy magisterskiej pisanej na Wydziale Psychologii Uniwersytetu Warszawskiego pod opieką profesor Marii Lewickiej. Dodatkowo, znajdują się w nim również raporty (w formatach .pdf/.html i .Rmd), które w sposób syntetyczny, ale opisowy i wyczerpujący przedstawiają wszytkie najważniejsze etapy skalowania i redukcji danych oraz właściwych analiz służących weryfikacji postawionych w pracy hipotez.
+
+Wszystkie dane są udostępnione zarówno w formie surowej jak i w postaci przygotowanej do poszczególnych etapów analizy. Jedyna zmiana w danych surowych to ich pełna anonimizacja. Ponadto niektóre etapy transformacji i rekodowania danych nie są w pełni udokumentowane. Dotyczy to przede wszystkim klasyfikacji i grupowania surowych danych tekstowych dotyczących odwiedzanych przez respondentów miejsc. Wynika to z faktu, że ilość tych danych była bardzo duża (ponad 2 tys. wskazań na miejsca w danych surowych) i były one zupełnie nieustrukturyzowane przez co musiały być rekodowane w dużym stopniu ręcznie i przy użyciu setek wyrażeń regularnych, co oczywiście sprawiało, że pełne udokumentowanie wszystkich transformacji było zadaniem ponad siły jednej osoby. Więcej informacji na temat rekodowania surowych danych ze wskazaniami na miejsca w opisie danych dotyczących miejsc.
+
+Mapa repozytorium
+----------------------
