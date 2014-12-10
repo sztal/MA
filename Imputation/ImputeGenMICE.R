@@ -10,10 +10,10 @@
 library(mice)
 library(dplyr)
 library(lattice)
-source("MissImpute/ImputeHelper.R")
-source("GenCompFuncs/ComputingMisc.R")
+source("Imputation/ImputeHelper.R")
+source("HelperFunctionsMisc/ComputingMisc.R")
 
-D = read.csv("Dane/LimDatInd231.csv")
+load("MainData/DatIndBIM2.RData")
 NAs = apply(D, 2, numNA)
 print(NAs) # number of NAs for each variable
 
@@ -136,13 +136,22 @@ vars = c(20:37,  39:49, 51:61, 63:79, 81:94)
 Cult = D[,vars]
 CultNAs = apply(Cult, 2, numNA) # number of NAs in Cult;
 # There is much more of them than in the previous cases
-CultImp = mice(Cult, m=20, seed=9999, method="pmm")
+CultImp = mice(Cult, m=20, method="pmm", seed=8888)
 CultImpL = actualImp(CultImp$imp)
 CultImpErr = ImpOut(CultImpL, Cult)[[1]] # Uncertainity of imputed values
 CultImpVal = ImpOut(CultImpL, Cult)[[2]] # Dominant imputed values
 Cult = mapImpToData(CultImpVal, Cult)  # Map imputed values back to the dataset
 CultRMSE = meanImpRMSE(CultImp, Cult)
 CultSE = apply(Cult, 2, se, na.rm=TRUE)
+# Once again becuase tv.a8 was not imputed for some reason (?)
+CultImp2 = mice(Cult, m=20, method="pmm", seed=8888)
+CultImpL2 = actualImp(CultImp2$imp)
+CultImpErr2 = ImpOut(CultImpL2, Cult2)[[1]] # Uncertainity of imputed values
+CultImpVal2 = ImpOut(CultImpL2, Cult2)[[2]] # Dominant imputed values
+Cult2 = mapImpToData(CultImpVal2, Cult2)  # Map imputed values back to the dataset
+CultRMSE2 = meanImpRMSE(CultImp2, Cult2)
+CultSE2 = apply(Cult2, 2, se, na.rm=TRUE)
+Cult = Cult2
 #########################################
 # Plot RMSE against SE and entropy bars
 # - tv preferences
@@ -254,10 +263,12 @@ wD[, indSC] = SC
 wD[, indAtt] = Att
 
 # Save the workspace (in order not to repeat the computationally heavy analysis)
-save.image("MissImpute/MICEimput.RData")
+save.image("Imputation/MICEimput.RData")
 
+D = wD
 # Save the dataset
-write.csv(wD, file="Dane/FullDatInd231.csv", row.names=FALSE)
+write.csv(D, file="MainData/MainData1.csv", row.names=FALSE)
+save(D, file="MainData/MainData1.RData")
 rm(list=ls())
 
 # This is it folks!
