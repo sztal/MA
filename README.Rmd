@@ -13,3 +13,21 @@ Wszystkie dane są udostępnione zarówno w formie surowej jak i w postaci przyg
 
 Mapa repozytorium
 ----------------------
+* **Katalog główny (MA)** - zawiera plik z kwestionariuszem użytym do zebrania danych (Kwestionariusz.pdf) oraz plik projektu Rstudio o nazwie MA.Rproj. Ponadto zawiera w sobie katalogu z poszczególnymi elementami:
+      * **rawData** - tutaj znaleźć można wszystkie pliki z danymi surowymi oraz pliki pomocniczne użyte przy rekodowaniu i klasyfikowaniu odpowiedzi z pytań otwartych. Zanjduje sę tutaj również skrypt ("RelabellingAndBasiDataTrans.R"), który został użyty do przekształcnia surowego zbioru "raw244.csv" w zbiór "DatInd231.csv", który znaleźć można w katalogu "MainData". Skrypt zawiera również opis kolejnych czynności i transformacji.
+      * **MainData** - tutaj znajdują się wszystkie zbiory danych po kolejnych etapach rekodowana i transformacji. Wszystkie z nich zapisane są jako obiekty R (format .RData), ponieważ ten format zapewnia utrzymanie poprawnej kolejności poziomów zmiennych jakościowych. Niemniej jednak najważniejsze zbiory danych zapisane są również w formacie .csv w celu zapewnienia możliwości replikacj wyników również przy użyciu innych niż język R narzędzi. Dokładny opis kolejności powstawania zbiorów danych i relacji między nimi w sekcji "Generowanie Danych".
+      * **HelperFunctionsMisc** - ten foleder zawiera skrypty z różnymi dodatkowymi funkcjami, które napisałem, żeby ułatwić sobi pracę oraz zwiększyć czytelność kodu.
+      * **Imputation** - tutaj znaleźć można skrypty służące podstawaniu brakujących odpowiedzi. Znajduje się tu również skrypt z funkcjami pomocniczymi, których używałem przy podstawianiu a także obiekt .RData zawierający całą przestrzeń zmiennych związanych z finałowym etapem podstawiania brakujących danych przy pomocy algorytmu MICE. Służy to temu, żeby nie trzeba było za każdym razem od nowa dokonywać wszystkich obliczeń, ponieważ algorytm MICE jest dosyć kosztowny obliczeniowo, więc cały proces może zająć nawet do kilkunastu minut.
+
+Generowanie Danych
+---------------------
+
+**UWAGA:** poprawne wykonanie wszelkich skryptów zawartych w tym repozytorium jest zależne od struktury środowiska całego projektu. Innymi słowy sktruktura katalogów oraz lokalizacja poszczególnych plików musi pozostać niezmieniona.
+
+**Dane na temat respondentów**
+
+Aby wygenerować ostateczny zbiór danych z poziomu danych surowych należy wykonać kolejno następujące kroki:
+1. Wykonaj skrypt "rawData/RelabellingAndBasiDataTrans.R"
+2. Wykonaj skrypt "Imputation/BasiImpute.R"
+3. Wykonaj skrypt "Imputation/LimitData.R"
+4. Wykonan skrypt "Imputation/ImputeGenMICE.R"
