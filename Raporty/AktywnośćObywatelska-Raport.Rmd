@@ -125,4 +125,4 @@ Rozkład pokazuje, że skala nie jest idealna, ponieważ jest odrobinę zbyt tru
 
 Na koniec należy zaznaczyć, że chociaż formalnie oparta o model Mokkena skala ma charakter porządkowy, to praktyka badawcza pokazuje, że z powodzeniem może ona być używana w charakterze skali przedziałowej (van der Gaag, Snijders, 2005).
 
-**Konie raportu**
+**Koniec raportu**
