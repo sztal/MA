@@ -120,8 +120,8 @@ pca.movies = fa.sort(pca.movies) # now communalities are good
 
 # Saving scales' scores
 D.back$moviesepic = pca.movies$scores[,1]
-D.back$moviehigh = pca.movies$scores[,2]
-D.back$movielight = pca.movies$scores[,3]
+D.back$movieshigh = pca.movies$scores[,2]
+D.back$movieslight = pca.movies$scores[,3]
 
 # Correlations with tv scales
 lowerCor(D.back[,190:197])
@@ -139,7 +139,7 @@ factor.fit(cor.books, pca.books$loadings) # fit: 0.67 or 0.71 - poor
 pca.books = fa.sort(pca.books) # factor loadings do not have a simple structure
 # Moreover there are several low communalities
 # Repeat analysis with 4 factors
-# This is because parallel test almost indicated 4 factors (I did for FA model)
+# This is because parallel test almost indicated 4 factors
 pca.books = principal(D, nfactors=4, rotate="quartimin")
 # The solution retains 63% of variance
 # Communalities are good
@@ -213,34 +213,13 @@ D.b = D[, which(names(D)=="press.b1"):which(names(D)=="press.b10")]
 histogram(expr(D.b), data=D.b, xlab="", layout=c(5,2))
 pairs.panels(D.b)
 cor.press.b = cor(D.b) # correlation matrix
-fa.parallel(D.b) # parallel monte carlo analysis suggests 2 components
-pca.press.b = principal(D.b, nfactors=2, rotate="quartimin")
-# Two dimensions retain 60% of variance
+fa.parallel(D.b) # parallel monte carlo analysis suggests 2 components, but 3D solutions seems also good; I choose 3D
+pca.press.b = principal(D.b, nfactors=3, rotate="quartimin")
+# Three dimensions retain 70% of variance
 factor.fit(cor.press.b, pca.press.b$loadings) # fit: 0.94 or 0.85 - good
-# The only problem with this solution is the fact that one item - press.b3 (Focus) - has very low communality. Therefore it should be excluded.
-# Repeat the analysis without press.b3
-D.b = D.b[, -which(names(D.b)=="press.b3")]
-# Distributions
-histogram(expr(D.b), data=D.b, xlab="", layout=c(3,3))
-pairs.panels(D.b)
-cor.press.b = cor(D.b) # correlation matrix
-fa.parallel(D.b) # parallel monte carlo analysis suggests 2 components
-pca.press.b = principal(D.b, nfactors=2, rotate="quartimin")
-# Two dimensions retain 60% of variance
-factor.fit(cor.press.b, pca.press.b$loadings) # fit: 0.96 or 0.89 - very good
-# The solution is again very good, but now press.b10 (Forbes) has very low communality.
-# Repeat the analysis without press.b10
-D.b = D.b[, -which(names(D.b)=="press.b10")]
-# Distributions
-histogram(expr(D.b), data=D.b, xlab="", layout=c(2,4))
-pairs.panels(D.b)
-cor.press.b = cor(D.b) # correlation matrix
-fa.parallel(D.b) # parallel monte carlo analysis suggests 2 components
-pca.press.b = principal(D.b, nfactors=2, rotate="quartimin")
-# Two dimensions retain 70% of variance
-factor.fit(cor.press.b, pca.press.b$loadings) # fit: 0.97 - very good
-# all communalities are very good now!
 pca.press.b = fa.sort(pca.press.b)
+
+
 
 ### Interpretation ###
 # dim1 - press.b7, press.b5, press.b4, press.b2 (Uważam Rze, Do Rzeczy, Gazeta Polsa, Rzeczpospolita)
@@ -252,6 +231,7 @@ pca.press.b = fa.sort(pca.press.b)
 # Saving scales' scores
 D.back$presscons = pca.press.b$scores[,1]
 D.back$presslib = pca.press.b$scores[,2]
+D.back$pressspec = pca.press.b$scores[,3]
 
 # Distributions of the scales computed so far
 histogram(expr(D.back[,190:205]), data=D.back, xlab="")
