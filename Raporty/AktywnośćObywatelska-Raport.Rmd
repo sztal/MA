@@ -1,0 +1,126 @@
+---
+title: "Aktywność obywatelska - skala mokkena"
+author: "Szymon Talaga"
+date: "11.12.2014"
+output: html_document
+---
+
+Raport przedstawia procedure skalowania aktywności obywatelskiej/społecznej (socact1 do socact14) w oparciu o jednowymiarowy nieparametryczny model Mokkena. Tak samo jak w przypadku innych raportów i skryptów poprawne wykonanie wszystkich przedstawionych tu procedur jest uzależnione od poprawnej struktury systemu plików (katalogów).
+
+Opisy zmiennych znaleźć można w pliku Codebook.pdf w folderze MainData.
+
+Wczytanie pakietu 'mokken', 'knitr' i dodatkowych funkcji własnych:
+```{r, results="hide"}
+library(mokken)
+library(knitr)
+library(lattice)
+source("../Scaling/scaling-Helper.R")
+```
+
+Wczytanie zbioru danych ("MainData1.RData") i ograniczenie go do zestawu zmiennych socact.
+```{r}
+load("../MainData/MainData1.RData") # load the main dataset
+D.back = D # backup copy of the full dataset
+D = D[,which(names(D)=="socact1"):which(names(D)=="socact14")]
+```
+
+Pierwsze sześć obserwacji zbioru danych:
+```{r, echo=FALSE}
+kable(head(D))
+```
+
+Zmienne posortowane pod względem poziomu trudności:
+```{r, echo=FALSE}
+D = meanSort(D)
+freq = apply(D, 2, mean)
+kable(round(freq, 3))
+```
+
+Procedura testowania dopasawania danych do skali Mokkena oparta jest na: van Schuur, 2003; van der Ark, 2007, 2012. Ogólnie rzecz biorąc skala Mokkena jest skalą kumulatywną, co oznacza, że zakłada się, iż pozytywna odpowiedź na pytanie trudniejsze powinna pociągać za sobą pozytywne odpowiedzi na pytania łatwiejsze. Można zatem powiedzieć, że jest ona stochastycznym uogólnieniem skalogramu Guttmana. W związku z tym ocena dopasowania danych do modelu oparta jest na zliczaniu tzw. błędów gutmannowskich, czyli przypadków, w których respondent udziela odpowiedzi pozytywnej na pytanie trudniejsze i negatywnej na pytanie łatwiejsze. Należy przy tym pamiętać, że w kontekście skali Mokkena prosta średnia arytmetyczna jest nieobciążonym i wystarczającym estymatorem trudności pozycji testowej, zatem trudność pytania to po prostu odsetek pozytywnych odpowiedzi.
+
+Kumulatywność skali Mokkena objawia się poprzez jej dwie właściwości - homogeniczną monotoniczność i podwójną monotoniczność. Homogeniczna monotoniczność oznacza, że dla każdego badanego prawdopodobieństwo pozytywnej odpowiedzi na pytanie jest pozytywnie związane z występującym u niego natężeniem badanej cechy - w tym przypadku aktywności obywatelskiej. W przypadku, gdy homogeniczna monotoniczność faktycznie występuje, to gwarantuje to poprawny pomiar cechy na skali porządkowej, w którym ilość pozytywnych odpowiedzi jest nieobciążonym i wystarczającym estymatorem badanej cechy. Spełnienie dodatkowego wymogu podwójnej homogeniczności, co oznacza, że dla każdej osoby wszystkie pytania można ułożyć w taki sam sposób od najłatwiejszego do najtrudniejszego, prowadzi do tego, że odsetek pozytywnych odpowiedzi jest wystarczającym estymatorem trudności pozycji testowej.
+
+Ponadto skala Mokkena jest oparta również na dwóch dodatkowych założeniach - jednowymiarowości (która zostanie sprawdzona na koniec) oraz lokalnej stochastycznej niezależności. Niezależności odnosi się do faktu, że zakłada się, iż odpowiedzi udzielane przez badanych są zależne jedynie od występującego u nich natężenia badanej cechy. Założenie to nie będzie weryfikowane jednak nie jest to konieczne - tak naprawdę jest to ciche założenie stojące za właściwie każdym pomiarem kwestionariuszowym i jako takie zostanie uznane za spełnione.
+
+We wszystkich tabelach, które zostaną pokazane najważniejsze są kolumny #ac, #vi, #zsig i crit. Pierwsza odnosi się do maksymalnej możliwej ilości naruszeń modelu dla danej zmiennej; #vi to ilość faktycznie występujących naruszeń; #zsig to ilość statystyczne istotnych naruszeń; crit to specjalna statystyka, która jest miarą krytycznościtych naruszeń - wartości powyżej 40 to umiarkowane naruszenia, zaś wartości powyżej 80 to naruszenia bardzo silne.
+
+Zgodność z założoniem homogenicznej monotoniczności / ukrytej monotoniczności (monotonous homogeneity / latent homogeneity)
+```{r}
+mono = check.monotonicity(D)
+kable(summary(mono))
+```
+
+Jak widać dane są doskonale zgodne z modelem homogenicznej monotoniczności.
+
+Zgodnośc z założeniem podwójnej monotoniczności. Metoda macierzy $P$:
+```{r}
+pmat = check.pmatrix(D)
+kable(summary(pmat))
+```
+
+Są pewne naruszenia modelu, ale są one stosunkowo nieznaczne. Widać, że narusza je najsilniej pozycja socact14 (działalność w stowarzyszeniu / klubie sportowym).
+
+Zgodność z założeniem podwójnej monotoniczności. Metoda wyników resztowych (restscores):
+```{r}
+rest = check.restscore(D)
+kable(summary(rest))
+```
+
+Znowu są pojawiają się lekkie niezgodności z modelem i pozycja socact14 jest najgorzej dopasowana.
+
+W tym momencie należy również zwrócić uwagę na kolumnę itemH w powyższej tabeli, która przedstawia parametry skalowania dla poszczegónych pozycji. Jest to specyficzna miara korelacji każdej pozycji z pozostałymi pozycjami oparta na ilości błędów gutmannowskich. Wartości poniżej 0,3 oznaczają kiepskie dopasowanie (van Schuur, 2003). Jak widać oznacza, to że pozycja socact14 powinna zostać usunięta ze skali. Ma to również sens intuicyjny, ponieważ określenie stowarzyszenie / klub sportowy jest zdecydowanie nieostre i może się nakładać na inne pytanie, co w oczywisty sposób może prowadzić do wzorców odpowiedzi niezgodnych z ideałem skalogramu guttmanowskiego.
+
+Zatem teraz przedstawione zostanie dopasowanie danych do modelu skali Mokkena z wyłączeniem pytania socact14.
+```{r, echo=FALSE}
+D = D[, -which(names(D)=="socact14")]
+```
+
+Homogeniczna monotoniczność:
+```{r}
+mono = check.monotonicity(D)
+kable(summary(mono))
+```
+
+Znowu występuje pełna zgodność z założeniem homogenicznej monotoniczności.
+
+Podwójna monotoniczność - metoda macierzy $P$:
+```{r}
+pmat = check.pmatrix(D)
+kable(summary(pmat))
+```
+
+Są lekkie odchylenia, ale żadna z wartości crit nie przekracza 40. Ponadto wszystkie pozycje charakteryzują się współczynnikami skalowania ($H$) większymi od 0,3.
+
+Podwójna monotoniczność - metoda wartości resztowych:
+```{r}
+rest = check.restscore(D)
+kable(summary(rest))
+```
+
+Ponownie nie ma żadnych silnych naruszeń modelu - dodatkowo żadne z odchyleń nie jest istotne statystycznie. Oznacza to, że dane są dobrze dopasowane do modelu podwójnej monotoniczności, zatem została osiągnięta pełna zgodność z modelem skali Mokkena.
+
+Globalby parametr skalowania dla całej skali wynosi `r coefH(D)$H` (w nawiasach podano błąd standrdowy), co oznacza, że jego 95% przedział ufności to: `r 0.442 + c(-1.96, 1.96) * 0.055`. Można zatem powiedzieć, że opracowana skala jest dosyć dobrej jakości.
+
+Rzetelność skali mierzona współczynnikie $\alpha$-Cronbacha wyniosła 0,76, co wskazuje na stosunkowo dobrą precyzję pomiaru. Współczynnik MS będący miarą stworzoną specjalnie dla skali Mokkena (van der Ark, 2012) wskazuje na nawet trochę wyższą rzetelność, ponieważ wyniósł on 0,77.
+
+Na koniec zostanie sprawdzona jednowymiarowość skali. Testem będzie automatyczna procedura grupowania pozycji testowych w jednowymiarowe skale. Jeżeli wszystkie pozycje zostaną zgrupowane w jeden wymiar/skale, to będzie to oznaczało, że opracowana skala jest w istocie jednowymiarowa. Tradycyjnie do grupowania pozycji testowych stosuje się opracowany przez Mokkena algorytm oparty o hierarchiczną analizę skupień. Jednak jest to procedura, która ma nie jednoznaczną funckję celu i jako taka nie może być uznana za optymalną. Van der Ark zaproponował lepszą metodę, opartą o algorytm genetyczny i w pełni zgodną z duchem oryginalnej idei Mokkena, która posiada jednoznaczną funckję celu i jako taka daje bardziej rzetelne wyniki.
+
+```{r}
+scale = aisp(D, search="ga")
+kable(scale)
+```
+
+Jak widać algorytm przydzielił wszystkie pozycje do jednej skali, co oznacza, że jest ona w pełni jednowymiarowa. Należy zatem powiedzieć, że opracowana skala jest stosunkowo wysokiej jakości i może być uznana za rzetelny wskaźnik aktywności obywatelskiej.
+
+Rozkład aktywności obywatelskiej:
+```{r}
+civic = apply(D, 1, sum)
+summary(civic)
+```
+```{r, echo=FALSE}
+histogram(~ civic, xlab="aktywność obywatelska", ylab="% ogółu")
+```
+
+Rozkład pokazuje, że skala nie jest idealne, ponieważ jest odrobinę zbyt trudna - dobrze różnicuje pomiędzy osobami o wysokiej aktywności, ale nie różnicuje tych mało aktywnych.
+
+Na koniec należy zaznaczyć, że chociaż formalnie oparta o model Mokkena skala ma charakter porządkowy, to praktyka badawcza pokazuje, że z powodzeniem może ona być używana w charakterze skali przedziałowej (van der Gaag, Snijders, 2005).

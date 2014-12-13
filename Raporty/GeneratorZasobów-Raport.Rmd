@@ -1,0 +1,254 @@
+---
+title: "Generator Zasobów - Raport"
+author: "Szymon Talaga"
+date: "11.12.2014"
+output: html_document
+---
+
+Raport przedstawia procedurę skalowania skal kapitału społecznego w modelu generatora zasobów. Zgodnie z polecanym przez autorów podejściem procedura skalowania oparta była na kolejnym wyodrębnianiu jednowymiarowych skal typu mokkenowskiego ze zbioru pozycji testowych (van der Gaag, Snijders, 2005). Do wyodrębniania skal zastosowano metodę opartą o algorytm genetyczny zaproponowaną przez van der Arka (2012). Opis właściwości skali Mokkena znaleźć można w raporcie opisującym skalowanie aktywności obywatelskiej.
+
+Jedyna istotna różnica w tym przypadku wynika z faktu, że pytania dotyczące kapitału społecznego były politomiczne. Skalowanie mokkenowskie z łatwością uogólnia się do pytań politomicznych, więc nie jest to problem (van Schuur, 2003). Jednakże wiąże się to z koniecznością zastosowania innej metody oceny podwójnej monotoniczności (van der Ark, 2012). Zostało to uwzględnione w opisanej tu procedurze skalowania.
+
+Należy również zwrócić uwagę na fakt, że algorytmy genetyczne użyte do wyodrębniania jednowymiarowych skal są bardzo złożone obliczeniowo i ich wykonanie może zajmować nawet do kilkunastu minut. Dlatego, jeśli pełna replikacja wyników nie jest celem, to poleca się korzystać z przygotowanego obiektu z przestrzenią roboczą, która zawiera wszystkie obiekty z danymi użyte w poniższych analizach. Jest to plik "Scaling/Scal-ResGenAll.Rdata".
+
+Wczytanie niezbędnych pakietów oraz zbioru danych:
+```{r}
+library(mokken)
+library(lattice)
+library(knitr)
+library(doBy)
+source("../Scaling/scaling-Helper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+
+load("../MainData/MainData2.RData")
+D.back = D
+D = D[,which(names(D)=="scknow1"):which(names(D)=="schelp15")]
+```
+
+Posortowanie pozycji testowych względem poziomu trudności:
+```{r}
+D = meanSort(D)
+popularity = apply(D, 2, mean)
+kable(popularity)
+```
+
+Zgodnie z rekomendowaną strategią najpierw dokonano automatycznej selekcji najlepszej skali jednowymiarowej. Aby zapewnić jej wysoką jakość i przeciwdziałać grupowaniu pytań nie za bardzo ze sobą powiązanych ustalono, że do skali mogą wchodzić jedynie pozycje, które uzyskują w niej parametr skalowania $H_i$ wynoszący co najmniej 0,40.
+
+Zbiór pytań, których dotyczy ta analiza to: scknow1 do scknow15 oraz schelp1 do schelp15.
+
+Automatyczna selekcja skal (przyporządkowanie do skali 0 oznacza brak przyporządkowania):
+```{r}
+scale.ga = aisp(D, search="ga", lowerbound=.4)
+kable(orderBy(~Scale, scale.ga))
+```
+
+Ograniczenie zbioru danych do wyodrębnionej skali:
+```{r}
+dim1 = rownames(scale.ga)[which(scale.ga==1)]
+rem = names(D)[!names(D) %in% dim1]
+D.dim1 = D[, dim1]
+```
+
+Jak widać do pierwszej (najmocniejszej) skali weszły tylko pytania z baterii schelp, a dokładniej pozycje 10, 6, 14, 5, 8, 13, 15, 12, 11, 3. Są to pytania, które odnoszą się (kolejno) do pomocy od osób, które: mogą napisać dobre referencje do pracy (10); załatwić pracę dorywczą (6); pożyczyć większą sumę pieniędzy (14); służyć poradą w sprawie konfliktu w pracy / szkole (5); pomóc przy przeprowadzce (8); pomóc w codziennych obowiązkach w przypadku choroby (13); przechować zapasowe klucze do odmu (15); przenocować przez kilka dni (12); wyjść razem do klubu itp. (11); porozmawiać  na tematy osobiste (3).
+
+Ten zestaw pytań można dosyć jednoznacznie interpretować jako możliwość mobilizacji różnego rodzaju zasobów w swojej sieci społecznej. Jako taka skala może być do pewnego stopnia utożsamiana z kapitałem wiążącym, czyli faktyczną siłą więzi w przypadku wystąpienia realnej potrzeby. Oczywiście niektóre pozycje intuicyjnie bardziej pasują do kategorii kapitału pomostowego, więc główną interpretacją tego wymiaru powinien być sam potencjał mobilizacyjny sieci. Jednakże ze względu na to, że pytania dotyczą faktycznej pomocy - a nie tylko samej znajomości - można tę skalę w wiekszym stopniu utożsamiać z kapitałem wiążącym niż z pomostowym.
+
+Teraz zostaną sprawdzone najważniejsze metryki jakości tej skali, którą można nazwać skalą moblizacji zasobów.
+
+Homogeniczna monotoniczność:
+```{r}
+mono.dim1 = check.monotonicity(D.dim1)
+kable(summary(mono.dim1))
+```
+
+Idealna zgodność z modelem homogenicznej monotoniczności.
+
+Ze względu na politomiczny charakter pozycji testowych do sprawdzenia podwójnej homogeniczności konieczne jest zastosowanie innej niż macierze $P$ i wyniki resztowe metody. Rekomendowana jest metoda niezmiennej kolejności pozycji testowych (van der Ark, 2012).
+
+```{r}
+iio.dim1 = check.iio(D.dim1)
+kable(summary(iio.dim1)$item.summary)
+```
+
+Jak widać dane są perfekcyjnie zgodne z modelem podwójnej homogeniczności. Zagwarantowany jest zatem w pełni poprawny pomiar porządkowy. Również wszystkie pozycje charakteryzują się zdecydowanie dobrymi parametrami skalowania ($H_i \geq$ 0,40).
+
+Obliczenie globalnego parametru skalowania:
+```{r}
+H.dim1 = coefH(D.dim1)
+H.dim1$H
+```
+
+Globalny parametr skalowania również należy uznać za satysfakcjonujący: $H =$ 0,452. 95% przedział ufności wyniósł: [`r .452 + c(-1.96,1.96) * .047`]. Można zatem uznać, że dane są dobrze dopasowane do modelu skali Mokkena.
+
+Rzetelność skali mierzona $\alpha$-Cronbacha wyniosła 0,84. Należy to uznać za bardzo dobry wynik. Jednocześnie ze względu na to, że pozycje testowe pochodzą z wielowymiarowego zbioru pytań najbardziej optymalnym wskaźnikiem rzetelności jest statystyka LCRC (van der Ark, 2012), która wyniosła 0,86. Należy zatem uznać, że skala jest obarczona relatywnie małym błędem pomiaru.
+
+Sprawdzona została również jednowymiarowość skonstruowanej skali.
+```{r}
+scale.ga.dim1 = aisp(D.dim1, search="ga")
+kable(scale.ga.dim1)
+```
+
+Jak widać jest ona jednoznacznie jednowymiarowa.
+
+Teraz zostanie przedstawiona procedura skalowania dla pozostałych pozycji testowych. Najpierw dokonano automatycznej selekcji najlepszej jednowymiarowej skali w ramach pozostałych pozycji testowych.
+```{r}
+D.rem = D[, rem]
+scale.ga.rem = aisp(D.rem, search="ga", lowerbound=.3) # with lower lowerbound this time
+dim2 = rownames(scale.ga.rem)[which(scale.ga.rem==1)]
+D.dim2 = D[, dim2]
+kable(orderBy(~Scale, scale.ga.rem))
+```
+
+Jak widać udało się wyodrębnić dosyć długą spójną skale (pozycje z przyporządkowanym numerem 1). Teraz należy sprawdzić, jak dobrze to rozwiązanie się skaluje.
+
+Homogeniczna monotoniczność:
+```{r}
+mono.dim2 = check.monotonicity(D.dim2)
+kable(summary(mono.dim2))
+```
+
+Perfekcyjna zgodność - brak naruszeń.
+
+Podwójna monotoniczność:
+```{r}
+iio.dim2 = check.iio(D.dim2)
+kable(summary(iio.dim2)$item.summary)
+```
+
+Wszystkie pozycje mają przyzwoite wartości H oraz jest stosunkowo niewiele naruszeń. Jedynie pozycje scknow3 i scknow9 sprawiają pewne problemy, dlatego warto przyjrzeć się im dokładniej. W tym celu zostanie przeprowadzona dodatkowo diagnostyka w oparciu o wyniki resztowe:
+```{r}
+rest.dim2 = check.restscore(D.dim2)
+kable(summary(rest.dim2))
+```
+
+Widać wyraźnie, że najgorzej dopasowana jest pozycja dziewiąta - ma największą wartość crit i aż trzy istotne statystycznie naruszenia modelu. Ponadto jej treść - odnosząca się do znajomości muzyka/dj'a - sugeruje, że faktycznie może być to niemiarodajne pytanie, ponieważ pozytywna odpowiedź może oznaczać wiele bardzo różnych rzeczy. Ktoś może znać popularnego warszawskiego dj'a, a ktoś inny mieć znajomego, który od czasu do czasu gra z kumplami w piwnicy. Należy się zatem pytania scknow9 pozbyć i powtórzyć analizy.
+
+```{r}
+D.dim2 = D.dim2[, -which(names(D.dim2)=="scknow9")]
+```
+
+Homogeniczna monotoniczność:
+```{r}
+mono.dim2 = check.monotonicity(D.dim2)
+kable(summary(mono.dim2))
+```
+
+Ponownie perfekcyjne dopasowanie.
+
+Podwójna monotoniczność:
+```{r}
+iio.dim2 = check.iio(D.dim2)
+kable(summary(iio.dim2)$item.summary)
+```
+
+Tym razem dane są doskonale zgodne również z założeniem podwójnej monotoniczności. Pondato wszystkie pozycje testowe charakteryzują się współczynnikami skalowania $H \geq$ 0,30.
+
+Globalny współczynnik skalowania:
+```{r}
+H.dim2 = coefH(D.dim2)
+H.dim2$H
+```
+
+95% przedział ufności dla globalnego współczynnika skalownaia wyniósł: [`r .387 + c(-1.96, 1.96) * .038`]. Należy jednak zwrócić uwagę na fakt, że pozycja scknow2 charakteryzuje się wartością H faktycznie leżącą minimalnie poniżej granicy 0,3 (można to sprawdzić przez odwołanie do H.dim2). Co więcej, dokładniejsza analiza korelacji miedzy pozycyjnych (sprawdzona przez odwołanie do H.dim2) pokazuje, że jest ona bardzo kiepsko dopasowane do kilku innych pozycji. Dodatkowo analiza treści pytania pokazuje, że może ono być mocno niejednoznaczne, gdyż dotyczy znajomości z osobą pracującą w jakiejś redakcji. Podobnie jak w poprzednim pytaniu może to oznaczać wiele rzeczy - od kumplowania się z redaktorem małej studenckiej gazetki do znajomości z ważnym pracownikiem jednej z największych polskich stacji radiowych czy dużego portalu internetowego. Należy zatem usunąć tę pozycję i kolejny raz sprawdzić dopasowanie danych do modelu.
+
+Homogeniczna monotoniczność:
+```{r}
+D.dim2 = D.dim2[, - which(names(D.dim2)=="scknow2")]
+mono.dim2 = check.monotonicity(D.dim2)
+kable(summary(mono.dim2))
+```
+
+Doskonałe dopasowanie.
+
+Podwójna monotoniczność:
+```{r}
+iio.dim2 = check.iio(D.dim2)
+kable(summary(iio.dim2)$item.summary)
+```
+
+Tym razem udaje się osiągnąć pełne dopasowanie do modelu podwójnej monotoniczności. Co więcej, najniższa wartość $H_i$ to 0,39.
+
+Globalny współczynnik skalowania:
+```{r}
+H.dim2 = coefH(D.dim2)
+H.dim2$H
+```
+
+95% przedział ufności dla globalnego współczynnika skalowania to: [`r .424+c(-1.96,1.96)*.041`]. Należy zatem uznać, że tym razem skala jest zdoecydowanie dobrej jakości. Dodatkowo teraz zdaje się mieć również dobrą i klarowaną interpretacje. Skupia ona następujące pytania: scknow14, scknow3, scknow5, scknow13, scknow10 i scknow11. Jak widać tym razem są to tylko pozycje z grupy scknow, co sugeruje większy związek tej skali z ogólną obecnością pewnych zasobów w sieci społecznej danej osoby bez patrzenia na potencjał do ich mobilizacji. Może to być zatem w znacznym stopniu utożsamiane z kapitałem pomostowym. Treści pytań dotyczą znajomości z następującymi rodzajami osób: kogoś, kto zna osoby z pierwszych stron gazet (14); kto zajmuje wysokie stanowisko w dużej firmie (3); kto zarabia ponad 8 tys. złotych miesięcznie (5); kto prowadzi własną firmę i zatrudnia pracowników (13); regularnie spędza urlop za granicą (10); biegle posługuje się przynajmniej jednym językiem obcym (11). Widać więc, że skala odnosi się do znajomości różnego rodzaju osób, które są lepiej usytuowane w życiu pod względem finansowym i/lub społeczno/towarzyskim, co można w znacznym stopniu utożsamić z pojęciem kapitału pomostowego.
+
+Skala ta zostanie nazwana skalą kontaktów społecznych.
+
+Na koniec należy sprawdzić jej jednowymiarowość.
+```{r}
+scale.ga.dim2 = aisp(D.dim2)
+kable(scale.ga.dim2)
+```
+
+Klarowna jednowymiarowa struktura.
+
+Rzetetelność skali:
+```{r}
+rel.dim2 =  check.reliability(D.dim2, LCRC = TRUE)
+```
+
+Skala wykazuje się również satysfakcjonującą rzetelnością. Współczynnik $\alpha$-Cronbacha wyniósł `r rel.dim2$alpha`, zaś optymalny dla przypadku wielowymiarowego zbioru pozycji parametr LCRC osiągnął wartość `r rel.dim2$LCRC`. Oba współczynniki wskazują na dosyć dobrą precyzję skali.
+
+Na zakończenie należy sprawdzić, czy pozostałe pozycje nie tworzą kolejnej skali. W tym celu zostanie przeprowadzona procedura automatycznej selekcji skali.
+```{r}
+rem = names(D)[!names(D) %in% c(names(D.dim1), names(D.dim2))]
+D.rem = D[, rem]
+scale.ga.rem = aisp(D.rem, search="ga")
+kable(scale.ga.rem)
+```
+
+Jak widać najdłuższa wyodrębniona skala składa się z pięciu pozycji i jest to zbiór:
+```{r}
+rem1 = rownames(scale.ga.rem)[which(scale.ga.rem[,1]==1)]
+D.rem1 = D[, rem1]
+```
+
+Warto przyjrzeć się temu, jak ten zbiór się skaluje:
+```{r}
+H.rem1 = coefH(D.rem1)
+H.rem1$H
+```
+
+Globalny współczynnik skalowania tego zbioru pytań wyniósł 0,343 z błędem standardowym równym 0,045. Oznacza to, że jego 95% przedział ufności to: [`r .343+c(-1.96,1.96)*.045`]. Widać zatem, że dolna granica dla globalnego H jest znacznie poniżej wartości granicznej 0,30. Skala ta jest więc zbyt niskiej jakości, aby ją uwzględniać w analizach. Oznacza to, że dwie wyodrębnione skale stanowią najlepsze możliwe do wyodrębnienia skale spośród zbioru pytań mierzących kapitał społeczny w ujęciu generatora zasobów.
+
+Obliczenie wyników dla obu skal:
+```{r}
+resmob = apply(D.dim1, 1, sum) # skala mobilizacji zasobów
+soccont = apply(D.dim2, 1, sum) # skala kontaktów społecznych
+D.back$resmob = resmob
+D.back$soccont = soccont
+```
+
+Na koniec warto omówić potencjał dyskryminacyjny obu skal. W tym celu najpierw warto przyjrzeć się rozkładom odpowiedzi dla poszczególnych pytań.
+
+Rozkład odpowiedzi dla pytań ze skali mobilizacji zasobów:
+```{r, echo=FALSE}
+histogram(expr(D.dim1), data=D.dim1, xlab="")
+```
+
+Widać, że większośc z nich jest silnie lewoskośna.
+
+Rozkład odpowiedzi dla pytań ze skali kontaktów społecznych:
+```{r, echo=FALSE}
+histogram(expr(D.dim2), data=D.dim2, xlab="")
+```
+
+Tu też przeważają, choć w mniejszym stopniu niż poprzednio, rozkłady lewoskośne.
+
+Teraz spójrzmy na to, jakie ma to konsekwencje dla rozkładów wyników obu skal:
+```{r, echo=FALSE}
+histogram(~ resmob + soccont, data=D.back, xlab="")
+```
+
+Oba rozkłady są również wyraźnie lewoskośne. Oznacza to, że skale nie dyskryminują pomiędzy osobami o wysokim kapitale społecznym, zatem mają ograniczoną zmienność. Jest to niestety problem, którego nie da się rozwiązać bez dodania dodatkowych pytań o wyższym poziomie trudności. Należy pamiętać o tym ograniczeniu obu skal przy dalszych analizach.
+
+Dodatkowo, wyraźna, ale nie bardzo silna korelacja pomiędzy skalami, może być uznana za pewne potwierdzenie ich trafności teoretycznej. Jednocześnie bardzo słaba korelacja obu skal ze skalą aktywności obywatelskiej potwierdza, że są to mierniki zupełnie inaczej rozumianego kapitału społecznego, co jest kolejnym dowodem trafności teoretycznej.
+```{r}
+kable(round(cor(D.back[,183:185]), 3))
+```
+
+**Koniec raportu**
