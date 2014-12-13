@@ -1,0 +1,121 @@
+---
+title: "Przywiązanie do miejsca - raport"
+author: "Szymon Talaga"
+date: "13.12.2014"
+output: html_document
+---
+
+Raport przedstawia procedurę skalowania baterii pytań odnoszących się do przywiązania do miejsca. Najpierw sprawdzona zostanie rzetelność ogólnej skali przywiązania do miejsca, zaś potem parametry 3-wymiarowej skali zakładającej nastepujące podskale: miejsce zastane, miejsce odkryte, brak przywiązania. Dokładny opis obu skal można znaleźć w: Lewicka, 2012. Jako, że wszystkie skale zostały już opracowane przez Lewicką, to sprawdzona zostanie tylko rzetelność uzyskana w próbie - analiza struktury (analiza czynnikowa) zostanie pominęta i zamiast tego zostanie przyjęte, że struktura odkryta przez autorkę skali obowiązuje i w tym przypadku. Ma to na celu zapewnienie porównywalności wyników. Procedura skalowania oparta jest o klasyczną teorię testów, zatem najważniejszym kryterium będzie współczynnik zgodności wewnętrznej $\alpha$-Cronbacha.
+
+Wczytanie niezbędnych pakietów i funckji oraz zbioru danych:
+```{r}
+library(psych)
+library(GPArotation)
+library(doBy)
+library(lattice)
+
+load("../MainData/MainData3.RData")
+D.back = D
+```
+
+Skala ogólna
+-------------
+
+Ograniczenie zbioru danych tylko do pytań ze skali ogólnej:
+```{r}
+D = D[,which(names(D)=="attgen1"):which(names(D)=="attgen9")]
+```
+
+Rzetelność:
+```{r}
+alpha(D)
+```
+
+Jak widać dwie pozycje mają odwrócone skale, co musi zostać poprawione.
+
+```{r}
+for(i in 2:3) D[,i] = recodeVar(D[,i], c(1,2,3,4,5), c(5,4,3,2,1))
+alpha(D)
+```
+
+Teraz skale odpowiedzi są poprawne. Jak widać skala osiąga bardzo wysoką rzetelność: $\alpha =$ 0,89. Może być zatem użyta bez przeszkód w dalszych analizach.
+
+Rozkład wyników skali:
+```{r, echo=FALSE}
+attgen = apply(D, 1, sum)
+histogram(~attgen, xlab="Przywiązanie do miejsca")
+```
+
+
+Przywiązanie do miejsca - skala 3-wymiarowa
+--------------------------------------------
+
+Teraz zostanie przedstawiona procedura skalowania skali 3-wymiarowej. Najpierw zbadana zostanie rzetelność wymiaru "miejsce zastane".
+
+**Miejsce zastane**
+
+```{r}
+D = D.back[,which(names(D.back)=="attmult1"):which(names(D.back)=="attmult18")]
+place.given = names(D)[c(5,10,11,15,8,7)]
+D.place.given = D[, place.given]
+alpha(D.place.given)
+```
+
+Pozycja attmult11 musi zostać odwrócona.
+
+```{r}
+D.place.given[,"attmult11"] = recodeVar(D[,"attmult11"], c(1,2,3,4,5), c(5,4,3,2,1))
+alpha(D.place.given)
+```
+
+Jak widać skala ma bardzo kiepską rzetelność. Zachodzi zatem ryzyko, że struktura czynnikowa skali w próbie może być inna. Najpierw jednak trzeba sprawdzić poziom rzetelności dwóch pozostałych skal.
+
+**Miejsce odkryte**
+
+Rzetelność tej skali sprawdzona w ten sam sposób, czyli w oparciu o współczynnik $\alpha$-Cronabacha:
+```{r}
+place.discovered = names(D)[c(16,6,3,9,14,4)]
+D.place.discovered = D[, place.discovered]
+alpha(D.place.discovered)
+```
+
+Jak widać ta skala osiągnęła satysfakcjonujący poziom rzetelności: $\alpha$ = 0,77. Sugeruje to zatem, że struktura czynnikowa narzędzia jest właściwa.
+
+**Brak przywiązania**
+
+Rzetelność:
+```{r}
+no.attachment = names(D)[c(1,17,13,12,18,2)]
+D.no.attachment = D[, no.attachment]
+alpha(D.no.attachment)
+```
+
+Ta skala również ma zadowoalającą rzetelność: $\alpha$ = 0,76. Oznacza to, że problemem w przypadku pierwszej skali nie jest nieodpowiednia względem próby struktura czynnikowa narzędzia, ale po prostu niedopasowanie niektórych pytań do jej specyfiki.
+
+**Miejsce zastane - poprawa**
+
+Kolejno sprawdzane było, które pozycje mogą zostać usunięte w celu poprawienia rzetelności całej skali. W ten sposób pozbyto się pozycji attmult11, attmult8, attmult7 i attmult15. Pozostały zatem jedynie pozycje attmult5 i attmult10. Rzut oka na treści pytań zdaje się potwierdzać słuszność tego podejścia - wszystkie odrzucone pozycje brzmią dosyć anachronicznie względem badanej tu próby, co sprawia, że udzielane na nie odpowiedzi mogą być w małym związku z rzeczywistym natężeniem przywiązania u osoby badanej, co w oczywisty sposób obniża rzetelność całej skali.
+
+Rzetelność po usunięciu pozycji:
+```{r, echo=FALSE}
+D.place.given = D.place.given[, -which(names(D.place.given)=="attmult11")]
+D.place.given = D.place.given[, -which(names(D.place.given)=="attmult8")]
+D.place.given = D.place.given[, -which(names(D.place.given)=="attmult7")]
+D.place.given = D.place.given[, -which(names(D.place.given)=="attmult15")]
+alpha(D.place.given)
+```
+
+Jak widać po tych zabiegach podskala 'miejsce zastane' osiągnęła zdecydowania zadowalającą rzetelność: $\alpha$ = 0,80. Wartość współczynnika jest zbliżona do rzetelności dla pozostałych skal oraz wyników oryginalnie otrzymanych przez Lewicką (2012).
+
+Rozkłady skal:
+```{r}
+D.back$attgen = attgen
+D.back$placegiven = apply(D.place.given, 1, mean)
+D.back$placediscovered = apply(D.place.discovered, 1, mean)
+D.back$attnoatt = apply(D.no.attachment, 1, mean)
+histogram(~placegiven+placediscovered+attnoatt, data=D.back, xlab="")
+```
+
+Oznacza to zatem, że wszystkie skale przywiązania są wystarczająca dobrej jakości oraz ich struktury czynnikowe są zgodne z oryginalnymi wynikami. Jedyną różnicą była konieczność ograniczenia zbioru pytań dla skali 'miejsce zastane' w celu dopasowania narzędzia do specyfiki badanej próby. Skale mogą być zatem użyte w dalszych analizach, przy czym najlepiej opierać się na skali ogólnej, która ma bardzo mały błąd pomiaru.
+
+**Koniec raportu**
