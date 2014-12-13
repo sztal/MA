@@ -16,8 +16,11 @@ Mapa repozytorium
 * **Katalog główny (MA)** - zawiera plik z kwestionariuszem użytym do zebrania danych (Kwestionariusz.pdf) oraz plik projektu Rstudio o nazwie MA.Rproj. Ponadto zawiera w sobie katalogu z poszczególnymi elementami:
       * **rawData** - tutaj znaleźć można wszystkie pliki z danymi surowymi oraz pliki pomocniczne użyte przy rekodowaniu i klasyfikowaniu odpowiedzi z pytań otwartych. Zanjduje sę tutaj również skrypt ("RelabellingAndBasiDataTrans.R"), który został użyty do przekształcnia surowego zbioru "raw244.csv" w zbiór "DatInd231.csv", który znaleźć można w katalogu "MainData". Skrypt zawiera również opis kolejnych czynności i transformacji.
       * **MainData** - tutaj znajdują się wszystkie zbiory danych po kolejnych etapach rekodowana i transformacji. Wszystkie z nich zapisane są jako obiekty R (format .RData), ponieważ ten format zapewnia utrzymanie poprawnej kolejności poziomów zmiennych jakościowych. Niemniej jednak najważniejsze zbiory danych zapisane są również w formacie .csv w celu zapewnienia możliwości replikacj wyników również przy użyciu innych niż język R narzędzi. Dokładny opis kolejności powstawania zbiorów danych i relacji między nimi w sekcji "Generowanie Danych".
-      * **HelperFunctionsMisc** - ten foleder zawiera skrypty z różnymi dodatkowymi funkcjami, które napisałem, żeby ułatwić sobi pracę oraz zwiększyć czytelność kodu.
+      * **HelperFunctionsMisc** - ten folder zawiera skrypty z różnymi dodatkowymi funkcjami, które napisałem, żeby ułatwić sobie pracę oraz zwiększyć czytelność kodu.
       * **Imputation** - tutaj znaleźć można skrypty służące podstawaniu brakujących odpowiedzi. Znajduje się tu również skrypt z funkcjami pomocniczymi, których używałem przy podstawianiu a także obiekt .RData zawierający całą przestrzeń zmiennych związanych z finałowym etapem podstawiania brakujących danych przy pomocy algorytmu MICE. Służy to temu, żeby nie trzeba było za każdym razem od nowa dokonywać wszystkich obliczeń, ponieważ algorytm MICE jest dosyć kosztowny obliczeniowo, przez co cały proces może zająć nawet do kilkunastu minut.
+      * **Scaling** - tutaj znajdują się skrypty i funkcje służące opracowaniu skal aktywności obywatelskiej, kapitału społecznego oraz przywiązania do miejsca.
+      * **DataReduction** - ten folder zawiera skrypty i funkcje, których przeprowadzają redukcję danych w oparciu o Analizę Głównych Składowych, Wielokrotną Analizę Korespondencji oraz Analizę Skupień (k-średnich).
+      * **Raporty** - ten folder zawiera raporty (napisane po polsku) dokumentujące w przystępny ale wyczerpujący sposób najważniejsze etapy przeprowadzonych analiz.
 
 Generowanie Danych
 ---------------------
@@ -28,7 +31,13 @@ Generowanie Danych
 
 Aby wygenerować ostateczny zbiór danych z poziomu danych surowych należy wykonać kolejno następujące kroki:
 
-1. Wykonaj skrypt "rawData/RelabellingAndBasiDataTrans.R"
-2. Wykonaj skrypt "Imputation/BasiImpute.R"
-3. Wykonaj skrypt "Imputation/LimitData.R"
-4. Wykonan skrypt "Imputation/ImputeGenMICE.R"
+1. Wykonaj skrypt "rawData/RelabellingAndBasiDataTrans.R" : raw244.csv --> DatInd231.RData
+2. Wykonaj skrypt "Imputation/BasiImpute.R" : DatInd231.RData --> DatIndBIM.RData
+3. Wykonaj skrypt "Imputation/LimitData.R" : DatIndBIM.RData --> DatIndBIM2.RData
+4. Wykonaj skrypt "Imputation/ImputeGenMICE.R" : DatIndBIM2.RData --> MainData1.RData
+5. Wykonaj skrypt "Scaling/Scaling-CivicActivity.R" : MainData1.RData --> MainData2.RData
+6. Wykonaj skrypt "Scaling/ResourceGenerator.R" : MainData2.RData --> MainData3.RData
+7. Wykonaj skrypt "Scaling/Scaling-Attachment.R" : MainData3.RData --> MainData4.RData
+8. Wykonaj skrypt "DataReduction/DatRed-CultPred.R" : MainData4.RData --> MainData5.RData
+                                                    : MainData4.RData --> MainData6.RData
+9. Wykonaj skrypt "DataReduction/PrepClustMCA.R" : MainData6.RData --> MainData7.RData
