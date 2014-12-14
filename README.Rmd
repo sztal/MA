@@ -41,3 +41,5 @@ Aby wygenerować ostateczny zbiór danych z poziomu danych surowych należy wyko
 8. Wykonaj skrypt "DataReduction/DatRed-CultPred.R" : MainData4.RData --> MainData5.RData
                                                     : MainData4.RData --> MainData6.RData
 9. Wykonaj skrypt "DataReduction/PrepClustMCA.R" : MainData6.RData --> MainData7.RData
+10. Wykonaj skrypt "DataReduction/MCA.R" : MainData7.RData --> MainData8.RData
+11. Wykonaj skrypt "DataReduction/Kmeans.R" : MainData8.RData --> MainData9.RData
