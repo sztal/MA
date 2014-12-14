@@ -1,0 +1,125 @@
+---
+title: "MCA"
+author: "Szymon Talaga"
+date: "14.12.2014"
+output: html_document
+---
+
+Raport przedstawia wyniki Wielokrotnej Analizy Korespondencji (MCA) na zbiorach porządkowych i nominalnych zmiennych dotyczących aktywności i preferencji kulturalnych oraz statusu socjoekonomicznego. W celu otrzymania w pełni poprawnego rozwiązania zastosowano korektę wartości własnych wymiarów rozwiązana (Greenacre, 2006). Dodatkowo, obok pozycji kategorii odpowiedzi w przestrzeni rozwiązania obliczono również współrzędne respondentów. Posłużono się do tego tzw. wzorem przejścia (Rouanet, 2006; Greenacre, 2006).
+
+Wczytanie niezbędnych pakietów i funckji oraz zbioru danych:
+```{r}
+library(lattice)
+library(psych)
+library(ca)
+library(knitr)
+source("../DataReduction/MCAhelper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+load("../MainData/MainData7.RData")
+D.back = D
+```
+
+MCA dla zmiennych związanych z aktywnością i preferencjami kulturalnymi
+-------------------------------------------------------------------------
+
+Przygotowanie danych:
+```{r}
+vars = names(D.back)[c(9:11, 21:30, 35:37)]
+D = D.back[, vars]
+```
+
+MCA:
+```{r}
+cc.mca = mjca(D, nd=NA, lambda="adjusted")
+summary(cc.mca)
+```
+
+Jak widać dwa pierwsze wymiary zachowują aż 67,7% wariancji, co jest zdecydowanie dobrym wynikiem. Co więcej praktycznie wszystkie zmienne i kategorie odpowiedzi (poza dosłownia kilkoma przypadkami) charakteryzują się wysoką lub bardzo wysoką jakością reprodukcji na dwuwymiarowej płaszczyźnie rozwiązania (wartość qlt). Co więcej dosyć równomiernie rozłożone wartości udziału punktów w wymiarach (wartość ctr) pokazują, że rozwiązanie nie jest patologicznie zdominowane przez tylko jedną bądź kilka kategorii odpowiedzi.
+
+Inspekcja wartości korelacji pokazuje, że właściwie we wszystkich przypadkach dominuje pierwszy wymiar. Wymiar drugi jest wyraźnie resztowy. Dodatkowo interpretacja będzie wsparta graficznym przedstawieniem rozwiązania.
+
+Graficzna prezentacja dla dwóch pierwszych wymiarów:
+```{r, echo=FALSE, fig.width=12, fig.height=12}
+cc.ind.coord = projectInd(D, cc.mca)
+par(mar=c(4,4,1,1))
+makeMCAplot(D, cc.mca, cex=.8, zoomout=1.5, xlab="Wymiar I", ylab="Wymiar II")
+par(mar=c(4,4,4,4))
+```
+
+Jak widać pierwszy wymiar zdecydowanie można interpretować jako klasycznie rozumiany ogólny kapitał kulturowy, który łączy zarówno stopień uczestnictwa w kulturze oraz poziom jej rozumienia jak i zmaterializowany kapitał kulturowy. Interpretacja drugiego wymiaru jest trudniejsza i tak naprawdę ma mały sens. Ewidentnie jest to wymiar resztowy (i wszystkie pozostałe też), co oznacza, że zasadnicza informacja zawarta w analizowanym zbiorze zmiennych jest jednowymiarowa. Wszystkie pozostałe wymiary, wydaje się, są raczej niczym więcej jak tylko dopasowywaniem danych do przypadkowego szumu. W związku z tym tylko pierwszy wymiar zostanie wyekstrachowany do dalszych analiz. Należy również zwrócić uwagę, że kierunek wymiaru jest odwrócony, tj. współrzędne ujemne odpowiadają wysokiemu kapitałowi kulturowemu.
+
+Obliczenie współrzędnych respondentów (funkcja własna 'projectInd' zawarta w: "MCAhelper.R"):
+```{r}
+cc.ind.coord = projectInd(D, cc.mca)
+D.back$cultcap = cc.ind.coord[,1] * (-1) # wyniki są odwrócone, żeby nowo zapisania zmienna odpowidała kapitałowi kulturowemu a nie jego przeciwieństwu
+```
+
+Tak skonstruowaną miarę kapitału należy uznać za raczej rzetelną. Przypomnijmy, że pierwszy wymiar rozwiązania (czyli właśnie kapitał kulturowy zachowuje aż 57,7% wariancji 44 kategorii odpowiedzi dla 231 respondentów, co jest wynikiem dosyć imponującym).
+
+Trafność teoretyczna zostanie sprawdzona przez sprawdzenie korelacji kapitału kulturowego z miarami preferencji kulturalnych:
+```{r, echo=FALSE, out.width=12, out.height=12}
+lowerCor(D.back[,48:69])
+```
+
+Stosunkowo wysokie korelacje ($r \geq$ 0,40) z bookshigh i musichigh zdają się potwierdzać teoretyczną trafnośc obliczonej skali. Dla większej czytelności poniżej przedstawiono macierz korelacji tylko z tymi dwiema zmiennymi:
+```{r, echo=FALSE}
+lowerCor(D.back[,c(56,65,69)])
+```
+
+Zauważmy, że rozkład kapitału kulturowego jest względnie symetryczny, co jest dobrym znakiem:
+```{r, echo=FALSE}
+histogram(~ cultcap, data=D.back)
+```
+
+Jako że kapitał kulturowy tworzy tylko jeden wymiar, to możliwe jest liniowe uporządkowanie poszczególnych kategorii odpowiedzi pod względem ich znaczenia dla kapitału kulturowego:
+```{r, echo=FALSE, fig.height=8, fig.width=8}
+ans = cc.mca$levelnames
+coords = -cc.mca$rowpcoord[,1]
+dotplot(reorder(ans, coords) ~ coords, xlab="Kapitał kulturowy")
+```
+
+MCA dla zmiennych związanych ze statusem socjoekonomicznym i demografią
+-------------------------------------------------------------------------
+
+Przygotowanie zmiennych:
+```{r}
+D = D.back
+vars = names(D.back)[c(2,6:8,14:18,39:40)]
+D = D.back[, vars]
+```
+
+MCA:
+```{r}
+sed.mca = mjca(D, nd=NA, lambda="adjusted")
+summary(sed.mca)
+```
+
+Jak widać rozwiązanie jest dobrej jakości - pierwsze dwa wymiary tłumaczą aż 69,1% wariancji, z czego pierwszy zachowuje 53,8%. Większość kategorii odpowiedzi jest dobrze reprodukowana na płaszczyźnie dwuwymiarowej (wysokie wskaźniki jakości - qlt). Analiza korelacji kategorii z wymiarami pokazuje, że pierwszy wymiar dotyczy przede wszystkim sytuacji życiowej w kategoriach ogólnej stabilizacji. Wysokie wartości odpowiadają ukończeniu studiów, stałej pracy i dobrej ogólnej sytuacji finansowej. Drugi wymiar odpowiada bardziej specyficznym zagadnieniom związanym ze stanem posiadania takich rzeczy jak: mieszkanie, samochód czy różne gadżety (np. tablet). W tym przypadku wydaje się zasadnym zachowanie drugiego wymiaru do dalszych analiz.
+
+Dodatkowy wgląd w sens otrzymanego rozwiązania dostarcza jego graficzna prezentacja:
+```{r, echo=FALSE, fig.width=12, fig.height=12}
+sed.ind.coord = projectInd(D, sed.mca)
+par(mar=c(4,4,1,1))
+makeMCAplot(D, sed.mca, cex=.8, zoomout=1.5, xlab="Wymiar I", ylab="Wymiar II") # MCA plot
+par(mar=c(4,4,4,4))
+```
+
+Należy zwrócić uwagę, że i w tym przypadku wymiary są odwrócone - wysokie dodatnie współrzędne odpowiadają niskiej stabilizacji i małemu posiadaniu.
+
+Zapisanie współrzednych respondentów:
+```{r}
+sed.ind.coord = projectInd(D, sed.mca)
+D.back$lifestab = sed.ind.coord[,1] * (-1)
+D.back$wealth = sed.ind.coord[,2] * (-1)
+```
+
+Brak wyraźnych korelacji z preferencjami kulturowymi i kapitałem kulturowym wskazuje na satysfakcjonującą trafność teoretyczną obu skal:
+```{r, echo=FALSE}
+lowerCor(D.back[,41:71])
+```
+
+Rozkłady skal:
+
+```{r, echo=FALSE}
+histogram(~ lifestab + wealth, data=D.back, xlab="")
+```
