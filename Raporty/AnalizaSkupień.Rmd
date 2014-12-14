@@ -1,0 +1,468 @@
+---
+title: "Analiza Skupień"
+author: "Szymon Talaga"
+date: "14.12.2014"
+output: html_document
+---
+
+Raport przedstawia procedurę klasyfikacji respondentów na podstawie poprzednio skonsturowanych skal i zmiennych. Do klasyfikacji posłuży Analiza Skupień metodą k-średnich, gdzie optymalna liczba grup zostanie wybrana w oparciu o procedurę oceny różnic wewnątrz- i międzygrupowych względem wielu metryk (Charrad, Ghazzali, Boiteau, Niknafs, 2014). Metoda ta została zaimplementowana w pakiecie *NbClust* dostępnym w środowisku R.
+
+Wczytanie niezbędnych pakietów i funkcji oraz wczytanie zbioru danych:
+
+```{r, warning=FALSE, message=FALSE}
+library(NbClust)
+library(lattice)
+library(psych)
+library(mvnormtest)
+library(MASS)
+library(candisc)
+library(biotools)
+library(vcd)
+library(knitr)
+source("../DataReduction/KmeansHelper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+
+load("../MainData/MainData8.RData")
+D.back = D
+```
+
+Przygotowanie danych do analizy skupień:
+
+```{r}
+vars = names(D.back)[c(11:12, 29:30, 37, 44:dim(D)[2])]
+D = D.back[, vars]
+D.s = scale(D)
+```
+
+Wykres osypiska (na podstawie sum kwadratów wewnątrzgrupowych) w celu sprawdzenia, czy nie ma oczywistego najlepszego podziału:
+
+```{r, echo=FALSE}
+wssplot(D.s, nc=15)
+```
+
+Jak widać wykres nigdzie nie wypłaszcza się gwałtownie. Oznacza to, że trzeba użyć bardziej zaawansowanej metody wyboru optymalnej liczby grup. W tym celu zostanie zastosowany algorytm NbClust, który wyznacza tę liczbę na podstawie ocen zebranych od 26 różnych metod oceny jakości podziału (opisy metod w: Charrad, Ghazzali, Boiteau, Niknafs, 2014). Dokładniej rzecz biorąc za optymalny podział zostaje uznany ten, który dostanie najwięcej głosów.
+
+**UWAGA: ** zaleca się, aby nie powtarzać tej części analizy, ponieważ wykonanie algorytmu NbClust zajmuje dosyć dużo czasu.
+
+Wybór optymalnego podziału:
+
+```{r}
+set.seed(5050) # ustawienie ziarna generatora liczb pseudolosowych
+nc <- NbClust(D.s, min.nc=2, max.nc=15, method="kmeans", index="all")
+```
+
+Jak widać procdura wskazała 2 skupienia jako optymalny punkt podzialu. Na drugim miejscu jest podział na 3 grupy. Decyduję się wybrać podział na 3 grupy, jako że do dalszych analiz bardziej przydatna będzie odrobinę bardziej zróźnicowana klasyfikacja, zaś podział na 3 skupienia wciąż można uznać za adekwatny.
+
+Dokładne wyniki głosowania:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]), xlab="Liczba skupień", ylab="Liczba wskazań", col="gray15")
+```
+
+Dokonanie podziału:
+
+```{r}
+set.seed(1234) # set the pseudorandom numbers generator
+Kpart = kmeans(D.s, centers=3, iter.max=40, nstart=50)
+# Grupowanie k-średnich jest do pewnego stopnia zależne od warunków początkowych (które są losowe), dlatego procedura powtórzona jest 50 razy i wybrany jest najlepszy podział (najmniejsza suma kwadratów wewnątrzgrupowych)
+D.back$cluster = Kpart$cluster
+```
+
+Analiza i interpretacja skupień
+---------------------------------
+
+Przygotowanie danych:
+
+```{r}
+D.s = as.data.frame(D.s)
+D.s$cluster = Kpart$cluster
+centroids = Kpart$centers
+```
+
+Wykres profili centroidów:
+
+```{r, echo=FALSE, fig.width=12, fig.height=8}
+par(mfrow=c(1,1))
+plot(centroids[1,], type="l", ylab="dimension value", xlab="", xaxt="n", lwd=2, ylim=c(-1.5,1.5))
+axis(1, at=1:29, labels=colnames(centroids), las=3, cex.axis=1)
+lines(centroids[2,], col="red", lwd=2)
+lines(centroids[3,], col="blue", lwd=2)
+for(i in 1:29) {abline(v=i, lty=2, lwd=.7)}
+legend("topright", col=c("black", "red", "blue"), legend=1:3, lty=1, cex=.9)
+```
+
+Teraz zostanie przeprowadzony szereg jednoczynnikowych analiz wariancji w celu wybrania zbioru najbardziej różnicujących zmiennych. Ze względu na dużą ilość testów zostaną wybrane tylko te zmienne, które różnicują z $p \leq$ 0,01.
+
+```{r}
+Ftest.df = data.frame(Fval=vector(mode="numeric", length=29), pval=vector(mode="numeric", length=29))
+rownames(Ftest.df) = colnames(centroids)
+for(i in 1:29) {
+      model = aov(D.s[,i] ~ cluster, data=D.s)
+      Ftest.df[i, 1] = as.numeric(unlist(summary(model))[7])
+      Ftest.df[i, 2] = as.numeric(unlist(summary(model))[9])
+}
+Ftest.df.sig = Ftest.df[Ftest.df$pval < 0.01, ]
+kable(Ftest.df.sig)
+```
+
+Teraz zostaną sprawdzone różnice między parami średnich, żeby określić, które skupienia mają istotnie wyższe średnie w zakresie określonych zmiennych. Posłużą do tego testy t z poprawką Bonferroniego dla istotnośc.
+
+Zainteresowanie sportem:
+
+```{r}
+pairwise.t.test(D.s$sportint, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$sportint, D.s$cluster, mean),
+      odchylenie = tapply(D.s$sportint, D.s$cluster, sd)))
+```
+
+Widać, że skupienie 1 ma wyższą średnią od skupienia 3.
+
+Zainteresowanie piłką nożną:
+
+```{r}
+pairwise.t.test(D.s$football, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$football, D.s$cluster, mean),
+      odchylenie = tapply(D.s$football, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 mają wyższe średnie od skupienia 3.
+
+Aktywność obywatelska:
+
+```{r}
+pairwise.t.test(D.s$civic, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$civic, D.s$cluster, mean),
+      odchylenie = tapply(D.s$civic, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej od skupień 2 i 3.
+
+Proste i niewymagające programy telewizyjne:
+
+```{r}
+pairwise.t.test(D.s$tvlowbrow, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$tvlowbrow, D.s$cluster, mean),
+      odchylenie = tapply(D.s$tvlowbrow, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od 3.
+
+Bardziej wymagające programy telewizyjne:
+
+```{r}
+pairwise.t.test(D.s$tvhighbrow, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$tvhighbrow, D.s$cluster, mean),
+      odchylenie = tapply(D.s$tvhighbrow, D.s$cluster, sd)))
+```
+
+Główne popularne stacje telewizyjne w Polsce:
+
+```{r}
+pairwise.t.test(D.s$tvpop, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$tvpop, D.s$cluster, mean),
+      odchylenie = tapply(D.s$tvpop, D.s$cluster, sd)))
+```
+
+Skupienie 1 > Skupienie 2 > Skupienie 3
+
+Telewizje konserwatywne:
+
+```{r}
+pairwise.t.test(D.s$tvcons, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$tvcons, D.s$cluster, mean),
+      odchylenie = tapply(D.s$tvcons, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej niż skupienia 2 i 3.
+
+Filmy fantasy, science-fiction etc.
+
+```{r}
+pairwise.t.test(D.s$moviesepic, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$moviesepic, D.s$cluster, mean),
+      odchylenie = tapply(D.s$moviesepic, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej od skupień 2 i 3.
+
+Ambitne kino:
+
+```{r}
+pairwise.t.test(D.s$movieshigh, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$movieshigh, D.s$cluster, mean),
+      odchylenie = tapply(D.s$movieshigh, D.s$cluster, sd)))
+```
+
+Skupienie 2 > Skupienie 1 > Skupienie 3
+
+Ambitna literatura:
+
+```{r}
+pairwise.t.test(D.s$bookshigh, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$bookshigh, D.s$cluster, mean),
+      odchylenie = tapply(D.s$bookshigh, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej od skupień 2 i 3.
+
+Prosta literatura:
+
+```{r}
+pairwise.t.test(D.s$bookslow, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$bookslow, D.s$cluster, mean),
+      odchylenie = tapply(D.s$bookslow, D.s$cluster, sd)))
+```
+
+Skupienie 2 > Skupienie 1 > Skupienie 3
+
+Literatura popularno-naukowa, faktu itp.
+
+```{r}
+pairwise.t.test(D.s$booksknow, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$booksknow, D.s$cluster, mean),
+      odchylenie = tapply(D.s$booksknow, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej od skupień 2 i 3.
+
+Ogólne czytanie prasy:
+
+```{r}
+pairwise.t.test(D.s$pressgen, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$pressgen, D.s$cluster, mean),
+      odchylenie = tapply(D.s$pressgen, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od skupienia 3.
+
+Prasa konserwatywna:
+
+```{r}
+pairwise.t.test(D.s$presscons, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$presscons, D.s$cluster, mean),
+      odchylenie = tapply(D.s$presscons, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od 3.
+
+Standardowe popularne tytuły prasowe w Polsce:
+
+```{r}
+pairwise.t.test(D.s$presslib, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$presslib, D.s$cluster, mean),
+      odchylenie = tapply(D.s$presslib, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od 3.
+
+Praca specjalistyczna (hobbystyczna, branżowa etc.)
+
+```{r}
+pairwise.t.test(D.s$pressspec, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$pressspec, D.s$cluster, mean),
+      odchylenie = tapply(D.s$pressspec, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od 3.
+
+Ambitna muzyka:
+
+```{r}
+pairwise.t.test(D.s$musichigh, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$musichigh, D.s$cluster, mean),
+      odchylenie = tapply(D.s$musichigh, D.s$cluster, sd)))
+```
+
+Skupienie 1 > Skupienie 3 > Skupienie 2.
+
+Muzyka czarna / afroamerykańska itp.:
+
+```{r}
+pairwise.t.test(D.s$musicafro, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$musicafro, D.s$cluster, mean),
+      odchylenie = tapply(D.s$musicafro, D.s$cluster, sd)))
+```
+
+Skupienia 1 i 2 wyżej od 3.
+
+Kapitał kulturowy:
+
+```{r}
+pairwise.t.test(D.s$cultcap, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$cultcap, D.s$cluster, mean),
+      odchylenie = tapply(D.s$cultcap, D.s$cluster, sd)))
+```
+
+Skupienie 1 wyżej od 2 i 3.
+
+Posiadanie:
+
+```{r}
+pairwise.t.test(D.s$wealth, D.s$cluster, p.adjust.method = "bonferroni")
+kable(data.frame(
+      średnia = tapply(D.s$wealth, D.s$cluster, mean),
+      odchylenie = tapply(D.s$wealth, D.s$cluster, sd)))
+```
+
+Skupienie 2 wyżej od skupienia 1.
+
+Podsumowanie wyników powyższej analizy przedstawia poniższa tabela. Wartości 1 oznaczają przewagę danego skupienia w pewnym zakresie nad tymi skupieniami, które mają wartość -1. Wartość 0 odpowiada pozycji pośredniej pod względem danej zmiennej.
+
+```{r}
+c1 = c(1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,-1)
+c2 = c(0,1,-1,1,1,0,1,-1,1,-1,1,-1,1,1,1,1,-1,1,-1,1)
+c3 = c(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,-1,-1,0)
+Ftest.df.sig = cbind(Ftest.df.sig, c1,c2,c3)
+kable(Ftest.df.sig[,3:5])
+```
+
+Teraz można spróbować przedstawić odpowiednią interpretację otrzymanych skupień.
+
+Interpretacja skupień
+------------------------
+
+Na początek jednak zostanie przedstawionch kilka dodatkowych analiz.
+
+Skupienie a prestiż zawodu (uproszczona klasyfikacja ISCO):
+```{r}
+ISCOtab = table(D.back$cluster, D.back$ISCObroad)
+kable(ISCOtab)
+assocstats(ISCOtab)
+```
+
+Ewidentnie w skupieniu pierwszym przeważają osoby posiadające pracę i to raczej bardziej prestiżową. W skupieniu drugim duży udział mają osoby niepracujące, a w trzecim niepracujące, lub posiadające raczje dobrą pracę. Jak pokazują wyniki testów zależnośc między zmiennymi jest umiarkowanie silna (wartość V-Crammera) i istotna.
+
+Skupienie a rodzaj wykształcenia:
+```{r}
+eduprogtab = table(D.back$cluster, D.back$eduprog)
+kable(eduprogtab)
+assocstats(eduprogtab)
+```
+
+Jak widać w skupieniu pierwzym przeważają osoby o wykształceniu humanistycznym/społecznym. Skupienie drugie charakteryzuje się przewagą osób z wykształceniem w zakresie nauk społecznych lub ekonomiczno-menadżersko-biznesowych. W grupie trzeciej przeważają (zarówno względnie jak i bezwzględnie) osoby o wykształceniu ścisłym.
+
+Skupienie a wymiar pracy:
+```{r}
+worktimetab = table(D.back$cluster, D.back$worktime)
+kable(worktimetab)
+assocstats(worktimetab)
+```
+
+Widać, że w skupieniu pierwszym przeważają osoby o nieregulowanym czasie pracy, a w drugim osoby niepracujące (co już wiadomo po poprzedniej analizie). W skupieniu drugi oba rodzaje pracy rozkładają się po równo i są porównywalnie często co brak pracy.
+
+**Skupienie I** (n = 100)
+
+**Wolne Zawody :** do tego skupienia należą przede wszystkim osoby o wykształceniu humanistycznym/społecznym, które posiadają pracę i jest to często praca o nieregulowanym czasie. Charakteryzują się podwyższonym profilu konsumpcji i udziału w kulturze. Jednocześnie występuje u nich trend do odrobinę rzadszego posiadania dóbr takich jak własne mieszkanie, samochód itp.
+
+**Skupienie II** (n = 74)
+
+**Studenci :** nazwa nie jest zapewne idealna, ale dosyć dobrze oddaje charakter tej grupy. Skupia ona przede wszystkim osoby bez pracy, charakteryzuje się delikatną przewagą  studentów kierunków ekonomicznych, biznesowych i menadżerskich. Ma mieszany profil udziału i konsumpcji kultury - niektóre rzeczy są w tej grupiep popularne, inne nie i czasem są to dzieła ambitne, a czasem nie. Grupa charakteryzuje się również lekko podwyższonym wskaźnikiem posiadania, co oznacza, że jej członkowie odrobinę częściej posiadają własne mieszkania, samochody, tablety itp. Sugeruje to, że dosyć typowym reprezentatem tej grupy mogą być studenci kierunków biznesowo-ekonomicznym, którzy pochodzą z rodzin z zamożniejszej części klasy średniej, przez co mają ułatwiony start - np. dostają od rodziny samochód bądź mieszkanie.
+
+**Skupienie III** (n = 57)
+
+**Kulturalnie Wycofani :** grupa ta skupia osoby o obniżonym profilu uczestnictwa i konsumpcji kultury. Charakteryzuje się ona również przewagą osób o wykształceniu ścisłym. Należą do niej zarówno osoby pracujące i niepracujące.
+
+Na koniec zostanie przeprowadzona Liniowa Analiza Dyskryminacji, co da jeszcze bardziej pogłębiony wgląd w różnice między skupieniami.
+
+LDA
+---------
+
+Rozkłady wszystkich zmiennych użytych w analizie skupień:
+
+```{r, echo=FALSE}
+histogram(expr(D.s[,1:29]), data=D.s, xlab="")
+```
+
+Jak widać większość zmiennych jest względnie symetryczna i ma rozkłady zbliżone do normalnego.
+
+Dodanie skupień jako zmiennej do zbiorów danych:
+```{r}
+cluster = D.s$cluster
+cluster[cluster==1] = "Wolne_Zawody"
+cluster[cluster==2] = "Studenci"
+cluster[cluster==3] = "Kulturalnie_wycofani"
+cluster = as.factor(cluster)
+cluster = factor(cluster, levels(cluster)[c(3,2,1)])
+D.s$cluster = cluster
+D.back$cluster = cluster
+```
+
+Test wielowymiarowej normalności rozkładu zmiennych:
+```{r}
+mshapiro.test(as.matrix(t(D.s[,1:29])))
+```
+
+Zmienne nie mają wielowymarowego rozkładu normalnego. Nie jest to zaskoczenie bo zmiennych jest dosyć dużo - aż 29.
+
+Test M Boxa równości macierzy wariancji-kowariancji:
+```{r}
+boxM(D.s[,1:29], D.s$cluster)
+```
+
+Macierze nie są homogeniczne. To też nie powinno dziwić, ponieważ: 1) jest duża zmiennych; 2) nie ma wielowymiarowego rozkładu normalnego, a tym przypadku test Boxa prawie zawsze daje istotne wyniki.
+
+Pomimo braku pewności co do spełnienia założeń analiza dyskryminacyjna zostanie przeprowadzona. Jej cel jest głównie eksploracyjny, więc nawet jeżeli wyniki będą w jakiś sposób lekko zniekształcone, to nie będzie to miało wpływu na dalsze analizy.
+
+```{r, fig.height=12, fig.width=12}
+manova = manova(as.matrix(D.s[,1:29]) ~ D.s$cluster)
+lda1 = candisc(manova)
+summary(lda1)
+```
+
+Obie kanoniczne funckje dyskryminacyjne są istotne i tłumaczą zbliżone odsetki wariancji (co oznacza, że obie są tak samo istotne dla rozróżniania pomiędzy skupieniami). Jako, że czasem jeden obraz może być wart więcej niż tysiąc słów (czy liczb), inspekcja korelacji między zmiennymi a funkcjami dyskryminacyjnymi zostanie dokonana w oparciu o graficzną reprezentację modelu:
+
+```{r, fig.height=12, fig.width=12}
+plot(lda1, cex=.9)
+```
+
+Warto również spojrzeć na to, jak dużą część zmienności wyników dla funkcji kanonicznych tłumaczy przynależność grupowa. W tym celu wystarczy sprawdzić stosunek korelacyjny $\eta^2$ dla modelu manova, na którym oparta była analiza dyskryminacyjna.
+
+```{r}
+etasq(manova, partial=FALSE, method="pillai")
+```
+
+Jak widać przynależność do skupieni tłumaczy prawie 64% zmienności w 29-wymiarowej przestrzeni zmiennych, co należy uznać za bardzo dobry wynik. Świadczy to pozytywnie o dokonanej klasyfikacji respondentów i jest dowodem na jej adekwatność wobec rzeczywiście występujących różnic.
+
+Na zakończenie warto przyjrzeć się jeszcze raz współczynnikom strukturalnym zmiennych, czyli ich prostym korelacjom z funkcjami dyskryminacyjnymi. Pozwoli to przedstawić ostateczną interpretację funkcji. Dla ułatwienia podane zostaną tylko te zmienne, które korelują z przynajmniej jedną z funkcji na poziomie 0,40 lub większym.
+
+```{r}
+structure = as.data.frame(lda1$structure)
+structure = with(structure, structure[abs(Can1) >= 0.4 | abs(Can2) >= 0.4, ])
+kable(round(structure, 2))
+```
+
+Widać, że najsilniej korelują (ujemnie) z pierwszą z funkcji zmienne takie jak: tvcons, moviesepic, bookshigh, musichigh i cultcap. Oznacza to, że funkcja ta w najogólniejszym sensie odpowiada silnemu klasycznemu kapitałowi kulturowemu, być może z lekka tendencją do preferowania bardziej tradycyjnego stylu życia. Należy przy tym pamiętać, że skala ta jest odwrócona, więc ujemne wyniki odpowiadają wysokiemu kapitałowi kulturowemu.
+
+Druga kanoniczna funckja dyskryminacyjna koreluje w większym stopniu z tym, co można by nazwać bardzie standardowym i popularnym gustem. Jedynie silna wkład zmiennej movieshigh wydaje się z tego wyłamywać. Jednakże już wcześniej dało się zauważyć, że zmienna ta ma bardzo często przeciwne kierunki korelacji w stosunku do bookshigh i movieshigh, co sugeruje, że kino, uchodzące za ambitne, pełni odrobinę inną funkcję od literatury czy muzyki.
+
+Na koniec warto sprawdzić, jakie są średnie centroidów w zakresie wyników dla funckji dyskryminacyjnych:
+
+```{r}
+kable(lda1$means)
+```
+
+Wyniki można właściwie uznać za doskonale zgodne z przedstawionymi wcześniej interpretacjom. Skupienie pierwsze charakteryzuje się wysokim klasycznym kapitałem kulturowym (ujemne Can1) i niskim natężeniem gustu popularnego (niskie Can2). 
+
+Grupa Studenci ma niski kapitał kulturowy i silniejszą preferencje do gustu popularnego. Pozawala to wprowadzić pewną poprawkę do interpretacji tego skupienia, którą dało się zresztą przewidzieć już wcześniej: tak naprawdę do skupienie zdaje się w większym stopniu odpowiadać grupię, którą można by nazwać młodą klasą średnią (przed wejściem na rynek pracy). 
+
+Skupienie Kulturalnie_wycofani ma nienajwyższy kapitał kulturowy (ale wyższy od młodej klasy średniej) i zdecydowanie bardzo małe zainteresowanie kulturą popularną, co jest w zgodzie z wcześniejszą interpretacją.
