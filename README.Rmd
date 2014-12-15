@@ -43,3 +43,16 @@ Aby wygenerować ostateczny zbiór danych z poziomu danych surowych należy wyko
 9. Wykonaj skrypt "DataReduction/PrepClustMCA.R" : MainData6.RData --> MainData7.RData
 10. Wykonaj skrypt "DataReduction/MCA.R" : MainData7.RData --> MainData8.RData
 11. Wykonaj skrypt "DataReduction/Kmeans.R" : MainData8.RData --> MainData9.RData
+12. Wykonaj skrypt "Heterogeneity/HeterogeneityCoefs.R" : MainData9.Rdata, Places.RData, PlacesData.RData --> MainData10.RData
+
+**Wskazania na miejsca**
+
+Tak jak zostało wspomniane, dane ze wskazaniami na miejsca zostały opracowane w dużym stopniu ręcznie i w oparciu o pracę z wyrażeniami regularnymi w konsoli R. Ze względu na rozmiar tego przedsięwzięcia jego pełne udokumentowanie nie było możliwe. W katalogu "Places" znajdują się skrypty, które dokumentują część zabiegów i w oparciu o nie można sobie wyrobić ogólne pojęcie na temat tego w jaki sposób dane na temat miejsc zostały wyprodukowane. Obiekt "Places.RData" zawiera finalną wersję zrekodowanego zbioru danych ze wskazaniami na miejsca. Wiersze ramki danych to respondenci a kolumny to dziwiętnaście wskazań na miejsca + dwudziesta kolumna z identyfikatorami respondentów. Na podstawie tego zbioru danych (oraz zbioru respondntów) tworzony jest zbiór danych dla miejsc, który zawiera profile miejsc będące uśrednionymi profilami osób, które je odwiedzają. Dodatkowo posłużył on do wygenerowania wskaźników różnorodności przestrzeni społecznej, w której zanurzeni są badani. Wskaźniki te są oparte na entropii rozkładów osób odwiedzających dane miejsce, gdzie respondenci są poklasyfikowani zgodnie z wynikami analizy skupień.
+
+**Profile miejsc**
+
+1. Wykonaj skrypt "Places/PlaceProfiles.R" : MainData9.RData, IncidenceMatrix.RData, Places.RData --> PlaceData.RData
+
+**Jedno- i dwudzielne macierze sąsiedztwa**
+
+1. Wykonaj skrypt "Networks/BipartiteNetwork.R" : Places.RData i MainData9.RData --> IncidenceMatrix
