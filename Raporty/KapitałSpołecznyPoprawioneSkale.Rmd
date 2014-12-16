@@ -1,0 +1,169 @@
+---
+title: "Kapitał społeczny - poprawione skale"
+author: "Szymon Talaga"
+date: "16.12.2014"
+output: html_document
+---
+
+Raport przedstawia drugie podejście do skalowania kapitału społecznego. Zmiana strategii skalowania została wymuszona tym, że otrzymane skale, choć dobrej jakości pod względem zgodności z modelem mokkena, były obciążone bardzo poważną skazą - były zbyt łatwe i nie dyskryminowały między osobami o wysokim kapitale. Dlatego zastosowano trochę inne podejście, ale oparte na wynikach pierwszej procedury skalowania, które ma temu zaradzić.
+
+Jako punkt wyjścia przyjęto dokonane w poprzedniej analizie spostrzeżenie, że baterie pytań scknow i schelp odpowiadają innym wymiarom kapitału społecznego. Dlatego tym razem zostały wyodrębnione najlepsze skale w obrębie obu baterii, w których skład wchodziły tylko pytania o wyższym poziomie trudności. Dokładniej rzecz biorąc uwzględnione jedynie pozycje o średnich mniejszych bądź równych 3. Dzięki temu możliwe było wyłonienie skal o większej mocy dyskryminacyjnej.
+
+Wczytanie niezbędnych pakietów, funkcji i danych:
+```{r, message=FALSE}
+library(mokken)
+library(lattice)
+library(knitr)
+source("../Scaling/scaling-Helper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+load("../Scaling/Scal-ResGenAll.RData") # Wykorzystana zostaje przestrzeń zmiennych z poprzedniej analizy
+load("../MainData/MainData10.RData")
+D10 = D
+```
+
+Skalowanie mobilizacji zasobów (resmob)
+-----------------------------------------
+
+Wybór i ograniczenie zbioru zmiennych tylko do tych, których średnie są mniejsze bądź równe 3:
+
+```{r}
+D.help = D.back[, grep('schelp', names(D.back))]
+diffs.help = apply(D.help, 2, mean)
+D.hdiff = D.help[, names(diffs.help)[diffs.help <= 3]]
+```
+
+**Skalowanie**
+
+Automatyczny dobór pozycji o wystaczająco dobrych współczynnikach skalowania w oparciu  algorytm genetyczny:
+
+```{r}
+scale.ga.hdiff = aisp(D.hdiff, search="ga", lowerbound=.35)
+kable(scale.ga.hdiff)
+```
+
+Ograniczenie zbioru zmiennych do najlepszej skali (skala 1):
+
+```{r}
+D.hdiff = D.hdiff[, rownames(scale.ga.hdiff)[scale.ga.hdiff[,1] == 1]]
+```
+
+Jak widać pytania które pozostały odnoszą się do pomocy w zakresie: porady prawnej (4); załatwienia pracy dorywczej (6); napisania dobrych referencji (10); pożyczki większej sumy pieniędzy (14). Ten zestaw pytań jest o tyle dobry, że faktycznie odnosi się tylko i wyłącznie do dosyć specyficznych, i bardzo przydatnych, form pomocy, dzięki czemu, ma szanse faktycznie rożnicować osoby badane.
+
+Homogeniczna monotoniczność:
+
+```{r}
+mono.hdiff = check.monotonicity(D.hdiff)
+kable(summary(mono.hdiff))
+```
+
+Widać, że dane dobrze odpowiadają założeniu homogenicznej monotoniczności.
+
+Podwójna monotoniczność:
+
+```{r}
+iio.hdiff = check.iio(D.hdiff) # Metoda niezmiennej kolejności pozycji
+kable(summary(iio.hdiff)$item.summary)
+```
+
+Wyniki analizy pokazują, że dane są dobrze dopasowane również do założenia podwójnej monotoniczności.
+
+Globalny współczynnik skalowania:
+```{r}
+H.hdiff = coefH(D.hdiff)
+```
+
+Globalny współczynnik skalowania $H$ wyniósł 0,413 z 95% przedziałem ufności równym [`r .413 + c(-1.96, 1.96)*.042`]. Można to uznać za satysfakcjonującą dobroć dopasowania.
+
+Rzetelność:
+
+```{r}
+Rel.hdiff = check.reliability(D.hdiff, LCRC = TRUE)
+```
+
+Rzetelnośc mierzona współczynnikiem $\alpha$-Cronbacha wyniosła 0,71. Metoda LCRC dała taki sam wynik. Oznacza to, że skala ma wystarczający poziom precyzji pomiaru, chociaż zdecydowanie nie jest on idealny.
+
+Jednakże bezsprzeczną przewagę tego podejścia pokazuje prosty histogram:
+
+```{r}
+resmob = apply(D.hdiff, 1, sum)
+histogram(resmob, xlab="Mobilizacja zasobów")
+```
+
+Jak widać jest on o wiele mniej lewoskośny od rozkładu poprzedniej skali:
+
+```{r}
+histogram(~ resmob, data=D10, xlab="Mobilizacja zasobów")
+```
+
+Skalowanie kontaktów społecznych
+----------------------------------
+
+Wybór i ograniczenie zbioru zmiennych tylko do tych, których średnie są mniejsze bądź równe 3:
+
+```{r}
+D.kdiff = D.back[, grep("scknow", names(D.back))]
+diff.know = apply(D.kdiff, 2, mean)
+D.kdiff = D.kdiff[, names(diff.know)[diff.know <= 3]]
+```
+
+**Skalowanie**
+
+Automatyczny dobór pozycji o wystaczająco dobrych współczynnikach skalowania w oparciu  algorytm genetyczny:
+
+```{r}
+scale.ga.kdiff = aisp(D.kdiff, search="ga", lowerbound=.35)
+D.kdiff = D.kdiff[, rownames(scale.ga.kdiff)[scale.ga.kdiff[,1]==1]]
+```
+
+Wybrane pytania odnoszą się do znajomości osóby, która: pracuje w redakcji radia/gazety/telewizji itp. (2); jest muzkiem / dj'em (9); zna osobiście osoby rozpoznawalne z gazet/telewizji (14); zna się na sztuce/literaturze (15). Bezsprzeczną zaletą nowego podziału na skale jest to, że skala druga ewidentnie odnosi się do innego wymiaru kapitału społecznego. Mobilizacja zasobów dotyczy przede wszystkim możliwości otrzymania konkretnej i dosyć specyficznej pomocy, podczas gdy skala kontaktów społecznych odnosi się do miększego rodzaju kapitału, który jest związany przede wszystkim ze znajomością specyficznych i/lub popularnych/prestiżownych osób.
+
+Homogeniczna monotoniczność:
+
+```{r}
+mono.kdiff = check.monotonicity(D.kdiff)
+kable(summary(mono.kdiff))
+```
+
+Dane są wysoce zgodne z modelem homogenicznej monotoniczności.
+
+Podwójna monotoniczność:
+
+```{r}
+iio.kdiff = check.iio(D.kdiff)
+kable(summary(iio.kdiff)$item.summary)
+```
+
+Widać, że występuje również pełna zgodność z modelem podwójnej homogeniczności.
+
+Globalny współczynnik skalowania:
+
+```{r}
+H.kdiff = coefH(D.kdiff)
+```
+
+Globalny współczynnik skalowania wyniósł 0,374 z 95% przedziałem ufności równym [`r .374+c(-1.96,1.96)*.04`]. Jest to wartość akceptowalna, chociaż dolna granica przedziału minimalnie poniżej 0,30 wskazuje, że skala nie jest zbyt mocna.
+
+Rzetelność:
+
+```{r}
+Rel.kdiff = check.reliability(D.kdiff, LCRC = TRUE)
+```
+
+Nienajlepszą jakość skali pokazują również wartości współczynników rzetelności. $\alpha$-Cronbacha wyniosła 0,68 a współczynnik LCRC 0,66. Obie wartości można uznać za jescze akceptowalne, ale ewidentnie nie są one szczególnie dobre.
+
+Niemniej jednak skala ta ma wielką zaletą, jaką jest lepszy potencjał dyskryminacyjny, co widać po jej rozkładzie:
+
+```{r}
+soccont = apply(D.kdiff, 1, sum)
+histogram(soccont, xlab="Kontakty społeczne")
+```
+
+Jest on o wiele bardziej symetryczny niż rozkład pierwszej wersji skali:
+
+```{r}
+histogram(~ soccont, data=D10, xlab="Kontakty społeczne")
+```
+
+Dlatego też nowe wersje skali zostaną użyte w dalszych analizach. Jest to podyktowane przede wszystkim tym, że będą one użyte w analizach opartych na współczynnikach korelacji, a jak wiadomo ucięte rozkłady i ograniczenia wariancji zmiennych bardzo silnie zaniżają ich wartości.
+
+**Koniec raporty**
