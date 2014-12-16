@@ -51,9 +51,10 @@ entropy <- function(x, rel = FALSE) {
       # x maybe of a class table or or a simple vector
       if(class(x) != "table") x = table(x)
       x = prop.table(x)
+      if(length(which(x==0)) != 0) x = x[-which(x==0)]
       k = length(x) # number of classes
       H = sum(-x*log(x, 2))
-      if(rel) if(k==1) return(0) else return(H / log(k, 2))
+      if(rel) {if(k==1) return(0) else return(H / log(k, 2))}
       else return(H)
 }
 # This function centers or normalize a numeric variable vector

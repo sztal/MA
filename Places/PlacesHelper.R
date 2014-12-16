@@ -181,6 +181,7 @@ getFullPlaceInfo <- function(Pdat, D, P) {
 # 1) sum of entropies; 2) average entropy; 3) maximal entropy; 4) minimal entropy
 heterogeneityCoefs <- function(Pdat, D, P) {
       source("HelperFunctionsMisc/ComputingMisc.R")
+      require(dplyr)
       D = arrange(D, id)
       P = arrange(P, id)
       P = toCharacter(P)
@@ -223,3 +224,37 @@ heterogeneityCoefs <- function(Pdat, D, P) {
       E = data.frame(ent_total, ent_avg, ent_wgh, ent_max, ent_min)
       return(E)
 }
+
+# Real entropy measure; it is computed as entropy of the distribution of all (unique) persons (in terms of their cluster assignments) that are met through places that are being visited by the respondent
+
+realEntropy <- function(D, AM, rel=FALSE) {
+      source("HelperFunctionsMisc/ComputingMisc.R")
+      require(dplyr)
+      ids = as.numeric(rownames(AM))
+      ids = sort(ids)
+      D = arrange(D, id)
+      places = colnames(AM)
+      AM = AM[as.character(ids), ]
+      # initialize a vector storing real entropy values
+      ent = vector(mode="numeric", length=dim(D)[1])
+      for(id in ids) {
+            char.id = as.character(id)
+            index = which(ids == id) # to index new values properly on the ent vector
+            placevec = places[AM[char.id, ] == 1]
+            distentropy = 0 # initialize distribution entropy
+            if(length(placevec) > 0) {
+                  personvec = apply(as.matrix(AM[, placevec]), 1, sum)
+                  personvec[personvec > 1] = 1 # to includ only unique persons
+                  persons.id = ids[personvec == 1]
+                  clusterdist = D[D$id %in% persons.id, "cluster"]
+                  distentropy = entropy(clusterdist, rel=rel)
+                  ent[index] = distentropy
+            }
+            else {
+                  distentropy = NA
+                  ent[index] = distentropy
+            }
+      }
+      return(ent)
+}
+            
