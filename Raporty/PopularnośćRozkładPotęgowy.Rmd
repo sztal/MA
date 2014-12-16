@@ -1,0 +1,90 @@
+---
+title: "PopularnośćRozkładPotęgowy"
+author: "Szymon Talaga"
+date: "09.12.2014"
+output: html_document
+---
+
+--------------------------------------
+Popularność miejsc - rozkład potęgowy
+--------------------------------------
+Raport ten zawiera weryfikacje hipotezy potęgowego rozkładu popularności miejsc. Współczynniki rozkladu zostaną estymowane przy użyciu metody Największej Wiarygodności, jako że metoda Najmniejszych Kwadratów jest nieadekwatna w przypadku rozkładów potęgowych (Fronaczk i Fronczak, 2009). Ostateczna weryfikacja hipotezy zostanie oparta o test Kołmogorova-Smirnova.
+
+Wczytanie niezbędnych pakietów i funkcji oraz danych:
+```{r, message=FALSE}
+library(igraph)
+library(lattice)
+library(latticeExtra)
+source("../HelperFunctionsMisc/ComputingMisc.R")
+source("../Networks/NetworkMethods.R")
+load("../Places/PlaceData.RData") # Dane na poziomie miejsc
+```
+
+Rozkład popularności - jak widać wydaje się być zbliżony do potęgowego:
+```{r, echo=FALSE}
+histogram(~ Pdat$popularity, xlab="Popularność")
+```
+
+Estymacja (metodą Największej Wiarygodności) wykładnika $\alpha$ rozkładu potęgowego oraz jego błędu standardowego (wzór na błąd standardowy za: Fronczak i Fronczak, 2009)
+
+```{r}
+n = dim(Pdat)[1]
+fit = power.law.fit(Pdat$popularity, xmin=1, implementation="plfit")
+alpha.mle = fit$alpha
+alpha.mle.se = (alpha.mle - 1) / sqrt(n)
+```
+
+Wykładnik: $\alpha$ = `r alpha.mle`
+Błąd standardowy wykładnika: $\sigma_{\alpha}$ = `r alpha.mle.se`
+
+Widać, że estymacja jest obciążona bardzo małym błędem.
+
+Na tej podstawie można obliczyć wartość stałej normującej $C$ dla funckji gęstości rozkładu. Wyprowadzenie wzoru opiera się na prostej obserwacji, że całka funkcji gęstości prawdopodobieństwa po całej dziedzinie powinna równać się 1. Co w przypadku, gdy minialna popularność wynosi 1, daje wzór postaci: $C = \alpha - 1$. Wówczas $C$ wynosi `r alpha.mle - 1`.
+
+```{r}
+C = alpha.mle - 1
+```
+
+Na podstawie powyższej analizy można przeprowadzić wstępną graficzną weryfikację hipotezy w oparciu o wykres zależności częstości od popularności na skali podwójnie logarytmicznej (podstawa dziesiętna). Jeżeli rozkład popularności jest naprawdę potęgowy to równanie $lnP(popularność) = -\alpha ln(popularność) + C$ powinno dać dobre liniowe dopasowanie względem korelogramu.
+
+Wykres:
+
+```{r, echo=FALSE, fig.height=10, fig.width=10}
+x = Pdat$popularity
+xpr = mapPr(x)
+n = length(x)
+xyplot(xpr ~ x, xlab="Popularność (X)", ylab="P(X)",
+       scales=list(x=list(relation="free", log=10, cex=1),
+                   y=list(relation="free", log=10, cex=1)),
+       prepanel = function(x, y, subscripts) {
+             list(xlim=c(0,2))
+             list(ylim=c(min(y), max(y)))
+       },
+       panel = function(x, y, subscripts, ...) {
+             panel.xyplot(x, y, cex=1, ...)
+             panel.abline(a=log(C), b=-alpha.mle, lty=2, lwd=2)
+             panel.grid(h = -1, v = -1)
+             panel.rug(x = x[is.na(y)],
+                       y = y[is.na(x)])
+       },
+       subscripts = TRUE,
+       xscale.components = xscale.components.logpower,
+       yscale.components = yscale.components.logpower)
+```
+
+Wykres zdaje się świadczyć na korzyść hipotezy. Ostatecznym sprawdzianem będzie test Kołmogorova-Smirnova dopasowania danych empirycznych do teoretycznego rozkładu:
+
+```{r}
+p = fit$KS.p
+D = fit$KS.stat
+```
+
+Przetestowane zostały następujące hipotezy:
+
+$H_0$ : dane pochodzą z rozkładu potęgowego o wyznaczniku $\alpha$ = `r alpha.mle`
+
+$H_1$ : dane pochodzą z jakiegoś innego rozkładu
+
+Test przyniósł wynik negatywny: $D$ = `r round(D,3)`; $p$ = `r round(p,3)`. Oznacza to, że nie udało się odrzucić hipotezy zerowej, co oznacza, że rozkład popularności miejsc jest potęgowy. Ma on zatem własności bezskalowe - np. samopodobieństwo. Najważniejszą tego konsekwencją jest fakt, że ma on nieokreśloną wartość charakterystyczną, czyli nie można mówić o "przeciętnie" popularnym miejscu. Innymi słowy, pomimo że większość miejsc charakteryzuje się małą popularnością, to obok nich mogą się pojawiać super popularne miejsca (Fronczak i Fronczak, 2009)
+
+**Koniec raportu**
