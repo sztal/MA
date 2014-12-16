@@ -44,6 +44,7 @@ Aby wygenerować ostateczny zbiór danych z poziomu danych surowych należy wyko
 10. Wykonaj skrypt "DataReduction/MCA.R" : MainData7.RData --> MainData8.RData
 11. Wykonaj skrypt "DataReduction/Kmeans.R" : MainData8.RData --> MainData9.RData
 12. Wykonaj skrypt "Heterogeneity/HeterogeneityCoefs.R" : MainData9.Rdata, Places.RData, PlacesData.RData --> MainData10.RData
+13. Wykonaj skrypt "Scaling/ResGen-Revisited.R" : MainData10.RData --> MainData11.RData
 
 **Wskazania na miejsca**
 
