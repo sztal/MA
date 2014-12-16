@@ -19,6 +19,10 @@ histogram(~ ent_avg, data=D, xlab="Average Entropy") # nice quite symmetric dist
 histogram(~ ent_wgh, data=D, xlab="Weighted Entropy") # a bit weird; all three measures have quite different distributions
 histogram(~ ent_max + ent_min, data=D, xlab="") # skewed weird distributions
 
+# Add the number of places
+places = apply(AM, 1, sum)
+D$places = places
+
 # Save the dataset
 save(D, file="MainData/MainData10.RData")
 
