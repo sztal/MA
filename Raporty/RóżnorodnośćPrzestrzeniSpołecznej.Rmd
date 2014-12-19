@@ -437,4 +437,28 @@ vif(trunc.disc)
 
 Wszystkie wartości VIF są bliskie 1, co oznacza, że problem silnych współliniowości praktycznie nie występuje.
 
+**Entropia pełnej przestrzeni społecznej**
+
+Na koniec należy rozważyć jeszcze jedną kwestię. Średnia entropia odnosi się do tego jak przeciętnie zróżnicowane są miejsca odwiedzane przez daną osobę. W związku z tym odnosi się ona do średniego zróżnicowanie różnych podprzestrzeni (pól?) społecznych, z którymi osoba jest związana. W związku z tym nie jest ona bezpośrednio i jednoznacznie związana z różnorodnością całej przestrzeni społecznej jako takiej - którą można w tym kontekście rozumieć jako entropie rozkładu wszystkich osób, które chodzą do tych samych miejsc, co dany respondent. W związku z tym przeprowadzone analizy mówią o tym, jak przeciętne zróżnicowanie różnych podprzestrzeni przekłada się na kapitał społeczny. Dlatego warto przyjrzeć się temu, czy ogólne zróżnicowanie przestrzeni również może mieć na to jakiś wpływ.
+
+Na początek warto przyjrzeć się rozkładowy entropii pełnej przestrzeni:
+
+```{r, echo=FALSE, fig.width=6, fig.height=6}
+load("../MainData/MainData12.RData")
+data = D[, c("ent_avg", "fullent")]
+data = melt(data)
+levels(data$variable) = c("Średnia entropia", "Entropia pełnej przestrzeni")
+histogram(~ value | variable, data=data, xlab="")
+```
+
+Widać, że właściwie wszystkie osoby charakteryzują się zbliżonym rozkładem entropii pełnej przestrzeni (i jest ona dosyć duża). Obok nich występują nieliczne obserwacje odstające o bardzo niskim zróżnicowaniu. Średnia entropia ma za to dosyć symetryczny i ładny rozkład. Sugeruje to, że entropia pełnej przestrzeni jest kiepską zmienną, ktróra właściwie nie różnicuje pomiędzy osobami badanymi, a jedyne niskie wartości to obserwacje odstające, które w przeważającej większości są zapewne rezultatem małej motywacji przy wypełnianiu kwestionariusza badawczego i wskazania bardzo małej ilości miejsc.
+
+Aby lepiej przedstawić tę zależność między dwoma rodzajami entropii warto przedstawić oba rozkłady przy użyciu wykresów pudełkowych:
+
+```{r, fig.width=6, fig.height=6}
+bwplot(~ value | variable, data=data, horizontal=TRUE, xlab="")
+```
+
+Jak widać entropia pełnej przestrzeni jest praktycznie pozbawiona zmienności. Jest to o tyle ciekawe, że pokazuje, iż albo estymacja całkowitej różnorodności przestrzeni społecznej na podstawie miejsc jest nieefektywna, albo że pełna entropia jest ogólnie rzecz biorąc taka sama w społeczeństwie, a to, co się liczy to rożnorodność poszczególnych podprzestrzeni czy pól.
+
 **Koniec raportu**
