@@ -65,3 +65,11 @@ center <- function(x, norm=FALSE, na.rm=TRUE) {
       else x = x - mean(x, na.rm=na.rm)
       return(x)
 }
+
+makeGrid <- function(x, y, len=length(x)) {
+      x = sort(rep(x, len))
+      y2 = y
+      y = vector(mode="numeric", length=len^2)
+      for(i in 1:len) y[((i-1)*len+1):(i*len)] = y2
+      return(cbind(x, y))
+}
