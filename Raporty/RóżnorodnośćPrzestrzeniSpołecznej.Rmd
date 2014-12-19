@@ -1,0 +1,440 @@
+---
+title: "Różnorodność Przestrzeni Społecznej"
+author: "Szymon Talaga"
+date: "17.12.2014"
+output: html_document
+---
+
+Raport przedstawia wyniki analiz regresji badających związek pomiędzy różnorodnością przestrzeni społecznej (ocenianej na podstawie średniej entropii rozkładu typów (skupień) gości odwiedzających te same miejsca co respondent - zmienna ent_avg) a kapitałem społecznym operacjonalizowanym jako potencjał do mobilizacji zasobów oraz kontakty społeczne (soccont). Dodatkowo zostaną sprawdzone ewentualne interakcje ze skorelowanymi z kapitałem społecznym wymiarami przywiązania do miejsca.
+
+Wczytanie pakietów, funkcji oraz zbioru danych:
+
+```{r, message=FALSE}
+library(lattice)
+library(latticeExtra)
+library(car)
+library(MASS)
+library(psych)
+library(reshape2)
+library(lmtest)
+library(knitr)
+library(RColorBrewer)
+source("../HelperFunctionsMisc/ComputingMisc.R")
+load("../MainData/MainData11.RData")
+```
+
+Przygotowanie danych:
+
+```{r}
+D.back = D
+D = D.back[, c(1, 38:43, 68:72, 76)]
+E = D[, c(1:3, 12)]
+E = melt(E, id=c("id", "ent_avg"))
+levels(E$variable) = c("Mobilizacja zasobów", "Kontakty społeczne")
+```
+
+Korelogramy dla entropii i kapitału społecznego z dodanymi trendami liniowymi oraz lokalnie ważonym wygładzeniem typu loess.
+
+```{r, echo=FALSE, fig.width=8, fig.height=6}
+xyplot(value ~ ent_avg | variable, data=E, ylab="Kapitał społeczny", xlab="Średnia entropia",
+       panel = function(x, y) {
+             panel.xyplot(x, y)
+             panel.abline(lm(y ~ x))
+             panel.loess(x, y, col="red")
+       })
+```
+
+Widać, że zwłaszcza w przypadku skali soccont trend wygląda na kwadratowy.
+
+Macierz korelacji pomiędzy kapiałem społecznym, entropią i przywiązaniem do miejsca:
+
+```{r, echo=FALSE}
+lowerCor(D[,c(2:3, 12, 4:7)])
+```
+
+Ewidentnie jedynie skala ogólna przywiązania oraz miejsce odkryte charakteryzują się wyraźnymi korelacjami z kapitałem społecznym. Dlatego tylko te dwa wymiary zostaną włączone do modeli w celu testowania interakcji.
+
+Ograniczenie zbioru danych tylko do tych respondentów, dla których są obliczone wskaźniki entropijne.
+
+```{r}
+D = D[!is.na(D$ent_avg), ]
+```
+
+Moblizacja zasobów
+--------------------
+
+Model dwuzmiennowy:
+
+```{r}
+resmob.lm1 = lm(resmob ~ ent_avg , data=D)
+summary(resmob.lm1)
+```
+
+Model wyjaśnia 2,6% wariancji, zaś efekt entropii jest istotny na poziomie: $t_{216} =$ 2,389; $p =$ 0,0178. Jednakże lokalnie ważona linia trendu sugeruje, że model uwzględniający związek kwadratowy może być bardziej adekwatny w tym przypadku.
+
+Model kwadratowy:
+
+```{r}
+resmob.lm2 = lm(resmob~ent_avg+I(ent_avg^2), data=D)
+summary(resmob.lm2)
+```
+
+Model kwadratwoy wyjaśnia 4,1% wariancji, co daje wzrost o 1,6%. Czynnik liniowy jest istotny na poziomie: $t_{215} =$ 2,478; $p =$ 0,014. Czynnik kwadratowy okazał się być nieistotny: $t_{215} =$ -1,874; $p =$ 0,062. Warto jednak zwrócić uwagę na fakt, że był on bliski istotności. Niemniej jednak na podstawie przeprowadzonej analizy nie da się określić, czy faktycznie zachodzi zależność o charakterze kwadratowym, czy jest to jedynie osobliwość tego zbioru danych wynikająca z nielosowego dobory próby i niedoskonałości zastosowanych narzędzi pomiarowych. Oczywiście wzrost $R^2$ również okazała się być nieistotny (tak samo nieznacznie): $F_{1, 215} =$ 3,513; $p =$ 0,062.
+
+**Diagnostyka modelu**
+
+Normalność rozkładu reszt:
+
+```{r, fig.width=6, fig.height=6}
+qqPlot(resmob.lm2, ylab="Studentyzowane reszty", xlab="t-kwantyle")
+shapiro.test(resmob.lm2$residuals)
+```
+
+Jak pokazują wykres i wynik testu Shapiro-Wilka rozkład reszt modelu nie jest w pełni normalny. Wynika stąd, że estymowane współczynniki mogą nie być nieobciążone.
+
+Test heteroskedastyczności Breuscha-Pagana:
+
+```{r}
+bptest(resmob.lm2)
+```
+
+Test dał nieistotny wynik, co oznacza, że model charakteryzuje się stałą wariancją reszt.
+
+Test wartości odstających:
+
+```{r}
+out.test = outlierTest(resmob.lm2)
+p = out.test$p
+p = p.adjust(p[p<=.05], n = length(p[p<=.05]))
+p <=.05
+```
+
+Obserwacja numer 100 jest odstająca. Estymacja modelu bez jej udziału:
+
+```{r}
+resmob.lm3 = lm(resmob ~ ent_avg + I(ent_avg^2), data=D, subset=-which(D$id==100))
+summary(resmob.lm3)
+anova(resmob.lm3)
+```
+
+Brak wyraźnych zmian.
+
+**Interakcja z przywiązanie do miejsca**
+
+[zmienne niezależne zostają we wszystkich analizach wycentrowane, w celu ułatwiernia interpretacji i ograniczenia błędów standardowych współczynników (Sosnowski, 2010)]
+
+Ogólna skala przywiązania:
+
+```{r}
+resmob.gen = lm(resmob ~ (I(center(ent_avg))+I(center(ent_avg^2)))*I(center(attgen)), data=D)
+summary(resmob.gen)
+anova(resmob.gen)
+```
+
+Test brzegowy pokazał, że żaden z efektów nie jest istotnym dodatkiem do modelu bez jego udziału (Bieciek, 2012). Zaś test sekwencyjny (tabela z analizą wariancji) wykazał, że wprawdzie obie zmienne są istotne (poza czynnikiem kwadratowym), to ich interakcje nie są. Wobec tego związki z ogólną skalą przywiązania do miejsca nie będą rozpatrywane.
+
+Miejsce odkryte:
+
+```{r}
+resmob.disc = lm(resmob ~ (I(center(ent_avg))+I(center(ent_avg^2)))*I(center(attdiscovered)), data=D)
+summary(resmob.disc)
+anova(resmob.disc)
+```
+
+Test brzegowy wskazuje, że liniowy czynnik entropijny jest istotny, $t_{212} =$ 2,273; $p =$ 0,024. Ponadto czynnik kwadratowy jest bliski istotności, $t_{212} =$ -1.873; $p =$ 0,062. Efekt główny przywiązania również jest istotny, $t_{212} =$ 2,977; $p =$ 0,003. Jednocześnie oba efekty interakcji otarły się o istotność - interakcja z czynnikiem liniowym, $t_{212} =$ 1.894; $p =$ 0,060; interakcja z czynnikiem kwadratowym, $t_{212} =$ -1.754; $p =$ 0,081. Model jako całość wyjaśnia 9,6% wariancji.
+
+Test sekwencyjny wykazał, że przy kolejnym dodawaniu istotny wzrost $R^2$ obserwowany jest w przypadku liniowego czynnika entropijnego, $F_{1, 212} =$ 6,040; $p =$ 0,015, oraz przywiązani, $F_{1, 212} =$ 9.314; $p =$ 0,002. Ponadto czynnik kwardatowy okazał się być bardzo bliski istotności, $F_{1, 212} =$ 3,676; $p =$ 0,056. To samo tyczy się również interakcji przywiązania z czynnikiem kwadratowym, $F_{1, 212} =$ 3,077; $p =$ 0,081. Jako że wiele efektów, i w tym efekty interakcji, są bliskie istotności warto spróbować poddać interpretacji skosnstruowane modele oraz dokonać ich wizualizacji.
+
+Najpierw jednak należy dokonać diagnostyki modelu z interakcjami.
+
+**Diagnostyka**
+
+Normalność rozkładu reszt:
+
+```{r, fig.width=6, fig.height=6}
+qqPlot(resmob.disc, ylab="Studentyzowane reszty", xlab="t-kwantyle")
+shapiro.test(resmob.disc$residuals)
+```
+
+Podobnie jak w modelu prostym reszty nie są idealnie normalne.
+
+Heteroskedastyczność:
+
+```{r}
+bptest(resmob.disc)
+```
+
+Wartość testu Breuscha-Pagana jest bliska istotności, więc warto zasotsować inny test w celu otrzymania pewniejszych wyników. Użyty zostanie test Goldfeldta-Quandta.
+
+```{r}
+gqtest(resmob.disc)
+```
+
+Test Goldfelda-Quandta jednoznacznie wskazuje na to, że problem heteroskedastyczności nie występuje.
+
+Test wartości odstających:
+
+```{r}
+out.test = outlierTest(resmob.disc)
+p = out.test$p
+p = p.adjust(p[p<=.05], n = length(p[p<=.05]))
+p <= .05
+```
+
+Jedna odstająca osberwacja przy przyjęciu korrekty Bonferroniego (id 100). Estymacja modelu bez jej udziału.
+
+```{r}
+resmob.disc2 = lm(resmob ~ (I(center(ent_avg)) + I(center(ent_avg^2))) * 
+    I(center(attdiscovered)), data = D, subset=-which(D$id==100))
+summary(resmob.disc2)
+anova(resmob.disc2)
+```
+
+W tym przypadku usunięcie obserwacji doprowadziło do wzrostu wartości $R^2$ do 10%. Jest to jednak nieznaczna zmiana.
+
+Jako, że model jest wielozmiennowy należy również sprawdzić, czy nie występuje problem silnych współliniowości pomiędzy zmiennymi. Posłuży do tego statystyka VIF. Jako, że czynnik kwadratowy jest funkcją tej samej zmiennej, co czynnik liniowy VIF zostanie obliczony w oparciu o model z wyłączenie czynnika kwadratowego (oraz jego interakcji z przywiązaniem). 
+
+```{r}
+trunc.mod = lm(resmob ~ ent_avg * I(center(attdiscovered)), data=D)
+vif(trunc.mod)
+```
+
+Jak widać żadna ze zmiennych nie ma VIF wyższego niż 10, co oznacza, że nie ma problemu silnej współliniowości (Biecek, 2012).
+
+**Interpretacja**
+
+Model prosty (liniowy i kwadratowy czynnik entropijny) pokazuje, że moblizacja zasobów jest krzywoliniowo zależna od różnorodności przestrzeni społecznej. Zbyt mała i zbyt duża różnorodność wiąże się z obniżonym potencjałem mobilizacji sieci społecznej. Wskazuje na to ujemny współczynnik dla czynnika kwadratowego. Model opisany jest równaniem:
+$$Y = 6,180 + 7,395H - 3.229H^2 + \epsilon$$
+Jako, że jest to model kwadratowy warto obliczyć jego pochodną. Pozwoli to zobaczyć jaka jest funkcja wpływu entropii na mobilizację zasobów w zależności od jej poziomu. Pochodna opisana jest równaniem:
+$$\frac{dY}{dH} = 7,395 - 6,458H$$
+Przyrównując pochodną do zera można sprawdzić, gdzie jaka jest optymalny poziom różnorodności, który maksymalizuje potencjał mobilizacyjny sieci społecznej. Łatwo sprawdzić, że optymalną wartości jest: $H = 1.145091$. Oznacza to zatem, że średnia entropia przekraczająca trochę jeden bit jest optymalna. Ma to intuicyjną interpetację, wedle której najbardziej wspierające są środowiska, w których stosunkowo łatwo opisać ich typowych przedstawicieli.
+
+Opisane zależności można przedstawić graficznie:
+
+```{r, echo=FALSE, fig.width=6, fig.height=6}
+xyplot(resmob ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Mobilizacja zasobów",
+       panel = function(x, y) {
+             panel.xyplot(x, y)
+             panel.loess(x, y, col="red")
+             panel.curve(6.180+7.395*x-3.229*x^2, lwd=2)
+             panel.abline(h=mean(y), lwd=.5, lty=2)
+             panel.abline(v=1.145091, lwd=1.5, lty=2, col="red")
+       })
+```
+
+Na wykresie zaznaczono poziomą linię średnią dla mobilizacji zasobów oraz czerwoną pionową linią optymalną wartość średniej entropii. Jak widać krzywa równania modelu pokrywa się w znacznym stopniu z krzywą loess, co świadczy o przyzwoitym dopasowaniu modelu do empriycznego trendu danych. Warto jednak zwrócić uwagę, że ewentualna korzyść płynąca z odpowiedniego poziomu różnorodności jest relatywnie mała - grzbiet krzywej równania modelu wznosi się niewiele powyżej średniej dla mobilizacji zasobów. Oznacza to, że ważniejszym efektem różnorodności jest to, że jej zbyt wysoki bądź niski poziom może mieć zdecydowanie negatywny wpływ.
+
+
+Model z interackją z aktywnym przywiązaniem do miejsca ('Miejsce Odkryte') pokazuje, że przywiązanie nie ma istotnego wpływu na potencjał mobilizacyjny sieci społecznej, lecz odgrywa za to ważną rolę moderującą, ponieważ wzmacnia efekt różnorodności. Oznacza to, że w przypadku optymalnej różnorodności jej pozytywny wpływ na moblizacje jest zwiększony, zaś w przypadku za wysokiej bądź za niskiej różnorodności to jej negatywny efekt zostaje wzmożony. Równanie modelu (z pominięciem nieistotnego addytynego efektu przywiązania) jest postaci:
+$$Y = 4,874 + 9,655H - 4,217H^2 + 6,911HP - 3,768H^2P + \epsilon$$
+
+Bardziej intuicyjny wgląd w sens modelu zapewni jego reprezentacja graficzna:
+
+```{r, echo=FALSE, fig.width=12, fig.height=12}
+ent = seq(0,1.6, length.out=50)
+att = seq(1,5, length.out=50)
+grid = expand.grid(list(ent = ent, att = att))
+df = D[, c(2,6,12)]
+names(df)[2:3] = c("att", "ent")
+df$ent2 = df$ent^2
+df$entatt = df$ent*df$att
+df$ent2att = df$ent2*df$att
+df.lm = lm(resmob ~ ent + ent2 + att + entatt + ent2att, data=df)
+# Siatka
+grid.ext = grid
+grid.ext$ent2 = grid.ext$ent^2
+grid.ext$entatt = grid.ext$ent*grid.ext$att
+grid.ext$ent2att = grid.ext$ent2*grid.ext$att
+# Dopasowanie płaszczyzny do siatki
+grid.ext = grid.ext[, c(2,1,3,4,5)]
+fit = predict(df.lm, newdata=grid.ext)
+grid$fit = as.numeric(fit)
+resmob.plot = wireframe(fit ~ ent*att, data=grid, drape=T, colorkey=T, 
+                        screen=list(z=30, x=-60),
+                        xlab=list("Średnia entropia", rot=23),
+                        ylab=list("Miejsce odkryte", rot=-50),
+                        zlab=list("Mobilizacja zasobów", rot=95),
+                        col.regions = colorRampPalette(c("blue", "yellow3", "green"),
+                                               interpolate="linear", bias=.6)(75))
+resmob.plot
+```
+
+Wykres płaszczyny regresji pozwala na pełniejsze zrozumienie szczególnego charakteru interakcji między różnorodnością otoczenia społecznego (entropią) a przywiązaniem do miejsca w rozumienia skali 'Miejsce Odkryte'. Widać wyraźnie, że najwyższy potencjał mobilizacji zasobów charakteryzuje osoby o umiarkowanej entropii otoczenia i wysokim przywiązaniu. Jednocześnie im większe odchylenie entropii od jej optymalnego pziomu, tym bardziej negatywny, zamiast pozytywnego, efekt wywiera przywiązanie do miejsca. Sugeruje to, że osoby aktywnie przywiązane do miejsca potrzebują odpowiednio zróżnicowanego środowiska do czerpania korzyści ze swojego otoczenia społecznego.
+
+
+Kontakty społeczne
+---------------------
+
+Model dwuzmiennowy:
+
+```{r}
+soccont.lm1 = lm(soccont ~ ent_avg, data=D)
+summary(soccont.lm1)
+```
+
+Nieistotny wynik nie powinien dziwić. Przedstawiony na początku korelogram kazał przypuszczać, że związek liniowy pomiędzy zmiennymi nie występuje jako taki. Dlatego należy dopasować model kwadratowy.
+
+Model kwadratowy:
+
+```{r}
+soccont.lm2 = lm(soccont ~ ent_avg + I(ent_avg^2), data=D)
+summary(soccont.lm2)
+```
+
+Po uwzględnieniu czynnika kwadratowego okazuje się, że zarówno on jak i czynnik liniowy jest isotnie związany z kontaktami społecznymi. Model całościowo zachowuje 4,8% wariancji. Czynnik liniowy jest istotny na poziomie: $t_{215} =$ 3,019; $p =$ 0,003, a czynnik kwadratowy na poziomie: $t_{215} =$ -3,266; $p =$ 0,001. Zatem model jest opisany równaniem:
+$$Y = 6,645 + 8,004H - 4,999H^2 + \epsilon$$
+Jego pochodna to:
+$$\frac{dY}{dH} = 8,004 - 9,998H$$
+Jako, że czynnik kwadratowy ma ujemny współczynnik, to ramiona paraboli wykresu równania opadają ku dołowi. Oznacza to, że funkcja ma globalne maksimum. Przekształcając pochodną w taki sam sposób jak poprzednio, można sprawdzić, że maksimum występuje dla punktu $H = 0,800$. Poniższy wykres przedstawia graficznie otrzymane wyniki:
+
+```{r, echo=FALSE, fig.width=6, fig.height=6}
+xyplot(soccont ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Kontakty społeczne",
+       panel = function(x, y) {
+             panel.xyplot(x, y)
+             panel.loess(x, y, col="red")
+             panel.curve(6.645+8.004*x-4.999*x^2, lwd=2)
+             panel.abline(h=mean(y), lwd=.5, lty=2)
+             panel.abline(v=0.8, lwd=1.5, lty=2, col="red")
+       })
+```
+
+Podobnie jak poprzednio wykres funkcji równania regresji pokrywa się niemalże idealnie z krzywą loess. Co więcej w tym przypadku zakres danych pozwala się ujawnić kwadratowej zależności w większym odrobinę większym stopniu. Wynik jest zatem podobny - istnieje optymalny poziom zróżnicowania środowiska społecznego, który jest optymalny pod względem kapitału społecznego rozumianego jako zbiór kontaktów i znajomości.
+
+**Diagnostyka**
+
+Normalność reszt:
+
+```{r, fig.width=6, fig.height=6}
+qqPlot(soccont.lm1, ylab="Studentyzowane reszty", xlab="t-kwantyle")
+shapiro.test(soccont.lm1$residuals)
+```
+
+Stwierdzono odchylenie rozkładu od normalności, ale wykres kwantylowy sugeruje, że nie jest to odchylenie znaczne.
+
+Heteroskedastyczność:
+
+```{r}
+bptest(soccont.lm1)
+```
+
+Test Breuscha-Pagana wskazuje, że wariancja reszt jest stała.
+
+Test obserwacji odstających:
+
+```{r}
+out.test = outlierTest(soccont.lm1)
+p = out.test$p
+p = p.adjust(p[p<=.05], n = length(p[p<=.05]))
+p <= .05
+```
+
+Jedna silnie odstająca obserwacja (id 58). Estymacja modelu bez jej udziału.
+
+```{r}
+soccont.lm2 = lm(soccont ~ ent_avg + I(ent_avg^2), data=D, subset=-which(D$id==58))
+summary(soccont.lm2)
+anova(soccont.lm2)
+```
+
+Usunięcie obserwacji nie wpłynęło w żaden znaczący sposób na model. Zatem można się nią nie przejmować.
+
+**Modele interakcyjne**
+
+Teraz zostaną przedstawione testy modeli zakładających interakcję entropii z przywiązaniem do miejsca - ogólnym bądź aktywnym ('Miejsce Odkryte'). Tak samo jak ostatnim razem i teraz przywiązanie do miejsca zostanie wycentrowanie w celu ułatwienia interpretacji i ustabilizowania błędów standardowych.
+
+Interakcja z przywiązaniem ogólnym:
+
+```{r}
+soccont.gen = lm(soccont ~ (ent_avg + I(ent_avg^2)) * I(center(attgen)), data=D)
+summary(soccont.gen)
+anova(soccont.gen)
+```
+
+Testy brzegowe współczynników modelu wykazały, że jedynie entropia (oba czynniki) jest istotna. Testy sekwencyjne kolejnych modeli wskazały na to samo. Należy zatem przyjąć, że między różnorodnością otoczenia społecznego i ogólnym wymiarem przywiązania do miejsca nie zachodzi interakcja.
+
+Interakcja z przywiązaniem aktywnym ('Miejsce Odkryte')
+
+```{r}
+soccont.disc = lm(soccont ~ (I(center(ent_avg)) + I(center(ent_avg^2))) * I(center(attdiscovered)), data=D)
+summary(soccont.disc)
+anova(soccont.disc)
+```
+
+Stwierdzono, że model wyjaśnia aż 18,2% wariancji. Jest to oczywiście istotny wzrost względem 4,8% dla pierwszego modelu. Niemniej jednak żadne efekty interakcyjne nie są istotne. Testy brzegowe dla współczynników wykazały, że jedynie przywiązanie jest istotnym dodatkiem względem modelu bez swojego udziału, $t_{212} =$ 5,791; $p <$ 0,001. Testy sekwencyjne kolejnych modeli pokazały, że model kwadratowy wyjaśnie istotnie więcej niż sama średnia (co już wiadomo), oraz że dodanie addytywnego efektu przywiązania również istotnie (i to bardzo) wzmacnia moc predykcyjną modelu, $F_{1, 212} = 34,439$; $p < 0,001$. Efekty interakcji okazały się nieistotne.
+
+Warto jednak zwizualizować również ten model, żeby zobaczyć, jak różni się zależność między przywiązaniem a entropią w przypadku braku interakcji:
+
+```{r, echo=FALSE, fig.width=12, fig.height=12}
+ent = seq(0,1.6, length.out=50)
+att = seq(1,5, length.out=50)
+grid = expand.grid(list(ent = ent, att = att))
+df = D[, c(3,6,12)]
+names(df)[2:3] = c("att", "ent")
+df$ent2 = df$ent^2
+df$entatt = df$ent*df$att
+df$ent2att = df$ent2*df$att
+df.lm = lm(soccont ~ ent + ent2 + att + entatt + ent2att, data=df)
+# Siatka
+grid.ext = grid[, c(1,2)]
+grid.ext$ent2 = grid.ext$ent^2
+grid.ext$entatt = grid.ext$ent*grid.ext$att
+grid.ext$ent2att = grid.ext$ent2*grid.ext$att
+# Dopasowanie płaszczyzny do siatki
+grid.ext = grid.ext[, c(1,3,2,4,5)]
+fit = predict(df.lm, newdata=grid.ext)
+grid$fit = as.numeric(fit)
+soccont.plot = wireframe(fit ~ ent*att, data=grid, drape=T, colorkey=T, 
+                         screen=list(z=30, x=-60),
+                         xlab=list("Średnia entropia", rot=23),
+                         ylab=list("Miejsce odkryte", rot=-50),
+                         zlab=list("Mobilizacja zasobów", rot=95),
+                         col.regions = colorRampPalette(c("blue", "yellow3", "green"),
+                                               interpolate="linear", bias=.6)(75))
+soccont.plot
+```
+
+Jak widać w tym przypadku płaszczyzna jest prosta i wyższe przywiązanie za każdym razem wiąże się z większą ilością kontaktów społecznych. Lekka łukowata krzywizna płaszczyzny wzdłuż osi entropi jest oczywiście związana z kwadratowym charakterem jej związku z kontaktami społecznymi.
+
+Na koniec należy przeprowadzić diagnostykę modelu z interakcją.
+
+**Diagnostyka**
+
+Normalność reszt:
+
+```{r, fig.width=6, fig.height=6}
+qqPlot(soccont.disc, ylab="Studentyzowane reszty", xlab="t-kwantyle")
+shapiro.test(soccont.disc$residuals)
+```
+
+Jak widać w tym przypadku wprowadzenie do modelu przywiązania do miejsca oraz jego efektów interakcji doprowadziło do pełnej zgodności rozkładu reszt z krzywą normalną.
+
+Heteroskedastyczność:
+
+```{r}
+bptest(soccont.disc)
+```
+
+Zachowana jest również homoskedastyczność wariancji reszt.
+
+Test obserwacji odstacjących:
+
+```{r}
+out.test = outlierTest(soccont.disc, cutoff=Inf, n.max=Inf)
+p = out.test$p
+# Skorygowane wartości p dla obserwacji, które są istotnie odstające przy testach nieskorygowanych (poprawka jedynie dla ilości testów dla obserwacji istotnie odstających wedle testu nieskorygowanego)
+p = p.adjust(p[p<=.05], n = length(p[p<=.05]))
+p <= .05
+```
+
+Brak silnie odstających obserwacji.
+
+Statystyka VIF. Tak jak poprzednio VIF zostanie obliczony dla modelu z usunięciem czynnika kwadratowego, ponieważ jest on funkcją czynnika liniowego i w oczywisty sposób będzie zawyżał wyniki.
+
+```{r}
+trunc.disc = lm(soccont ~ I(center(ent_avg))*I(center(attdiscovered)), data=D)
+vif(trunc.disc)
+```
+
+Wszystkie wartości VIF są bliskie 1, co oznacza, że problem silnych współliniowości praktycznie nie występuje.
+
+**Koniec raportu**
