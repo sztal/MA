@@ -60,7 +60,7 @@ V(Gpp)$label[popular] = colnames(AM)[popular-231]
 E(Gpp)$color = rgb(.5,.5,0,.4)
 # Plotting
 lay <- layout.fruchterman.reingold(Gpp, coolexp=1, niter=1000, area=vcount(Gpp)^3)
-pdf("Pictures/bipartite.pdf")
+pdf("Networks/bigraph.pdf")
 par(mar=c(2,2,2,2))
 plot(Gpp, layout=lay)
 dev.off()
