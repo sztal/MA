@@ -65,8 +65,11 @@ par(mar=c(2,2,2,2))
 plot(Gpp, layout=lay)
 dev.off()
 
-# Save the adjacency (incidene) network
-save(AM, file="Networks/IncidenceMatrix.RData")
+# Degree distribution
+places.deg = apply(AM, 2, sum)
+persons.deg = apply(AM, 1, sum)
+histogram(places.deg, xlab="")
+histogram(persons.deg, xlab="")
 
 # This is it folks!
 rm(list=ls())

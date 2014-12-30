@@ -2,7 +2,9 @@
 title: "Analiza Skupień"
 author: "Szymon Talaga"
 date: "14.12.2014"
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 Raport przedstawia procedurę klasyfikacji respondentów na podstawie poprzednio skonsturowanych skal i zmiennych. Do klasyfikacji posłuży Analiza Skupień metodą k-średnich, gdzie optymalna liczba grup zostanie wybrana w oparciu o procedurę oceny różnic wewnątrz- i międzygrupowych względem wielu metryk (Charrad, Ghazzali, Boiteau, Niknafs, 2014). Metoda ta została zaimplementowana w pakiecie *NbClust* dostępnym w środowisku R.

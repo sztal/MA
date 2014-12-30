@@ -2,7 +2,10 @@
 title: "Różnorodność Przestrzeni Społecznej"
 author: "Szymon Talaga"
 date: "17.12.2014"
-output: html_document
+output:
+  pdf_document:
+    fig_height: 6
+    latex_engine: xelatex
 ---
 
 Raport przedstawia wyniki analiz regresji badających związek pomiędzy różnorodnością przestrzeni społecznej (ocenianej na podstawie średniej entropii rozkładu typów (skupień) gości odwiedzających te same miejsca co respondent - zmienna ent_avg) a kapitałem społecznym operacjonalizowanym jako potencjał do mobilizacji zasobów oraz kontakty społeczne (soccont). Dodatkowo zostaną sprawdzone ewentualne interakcje ze skorelowanymi z kapitałem społecznym wymiarami przywiązania do miejsca.

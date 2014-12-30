@@ -2,7 +2,9 @@
 title: "Preferencje kulturalne - PCA"
 author: "Szymon Talaga"
 date: "13.12.2014"
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 Raport przedstawia procedurę redukcji danych dotyczących preferencji kulturalnych. Dokładniej rzecz biorąc zredukowane zostaną wymiary wszystkich baterii pytań z 7-stopniową skalą lickertowską dotyczących preferencji względem książek, muzyki, prasy itp. Posłuży do tego Analiza Głównych Składowych. Podyktowane jest to tym, że celem jest przede wszystkim redukcja danych przy zachowaniu jak największej ilości wariancji oraz struktur korelacji (dlatego wybrano PCA a nie analizę czynnikową). Również z tego powodu zastosowana zostanie rotacja ukośna quartimin, która daje zwykle najklarowniejsze rozwiązania (simple structure) zachowując przy tym najwierniej korelacje międzyczynnikowe (Browne, 2001).
@@ -16,6 +18,7 @@ Finalnym produktem tej analizy będą wyniki czynnikowe respondentów, które po
 Jak zwykle opisy zmiennych można znaleźć w plikach "Kwestionariusz.pdf" i "Codebook.pdf".
 
 Wczytanie głównego zbioru danych oraz niezbędnych pakietów i funkcji:
+
 ```{r}
 load("../MainData/MainData4.RData")
 D.back = D
@@ -31,6 +34,7 @@ Preferencje względem telewizji
 **Bateria:** tv.a (1-8) : preferencje względem różnych rodzajów programów telewizyjnych
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D = D[,which(names(D)=="tv.a1"):which(names(D)=="tv.b9")]
 D.a = D[,which(names(D)=="tv.a1"):which(names(D)=="tv.a8")]
@@ -38,6 +42,7 @@ pairs.panels(D.a)
 ```
 
 Optymalna ilość wymiarów:
+
 ```{r}
 fa.parallel(D.a, fa="pc")
 ```
@@ -45,6 +50,7 @@ fa.parallel(D.a, fa="pc")
 Jak widać rozwiązanie 3-czynnikowe jest optymalne.
 
 PCA:
+
 ```{r}
 pca.tv.a = principal(D.a, nfactors=3, rotate="quartimin")
 pca.tv.a = fa.sort(pca.tv.a)
@@ -69,6 +75,7 @@ Teraz rozwiązanie jest dobrej jakości (zachowuje 70% wariancji) i można przys
 **Wymiar III (21% wariancji) :** tv.a7, tv.a8 (filmy i programy kulturalne/edukacyjne) : ten czynnik najbliższy jest preferowaniu bardziej wymagających produktów telewizyjnych, które wymagają bardziej wytężonej uwagi. Zostanie nazwany tvhighbrow.
 
 Zapisanie wyników czynnikowych respondentów:
+
 ```{r}
 D.back$tvinfo = pca.tv.a$scores[,1]
 D.back$tvlowbrow = pca.tv.a$scores[,2]
@@ -78,12 +85,14 @@ D.back$tvhighbrow = pca.tv.a$scores[,3]
 **Bateria:** tv.b1 do tv.b9 - preferencje względem polskich stacji telewizyjnych
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D.b = D[, which(names(D)=="tv.b1"):which(names(D)=="tv.b9")]
 pairs.panels(D.b)
 ```
 
 Optymalna ilość wymiarów:
+
 ```{r}
 fa.parallel(D.b, fa="pc")
 ```
@@ -91,6 +100,7 @@ fa.parallel(D.b, fa="pc")
 Jak widać optymalną liczbą wymiarów rozwiązania jest 2.
 
 PCA:
+
 ```{r}
 pca.tv.b = principal(D.b, nfactors=2, rotate="quartimin")
 pca.tv.b = fa.sort(pca.tv.b)
@@ -103,6 +113,7 @@ Rozwiązanie jest dobrej jakości (zachowuje 53% wariancji) i można przystąpi�
 **Wymiar II (23% wariancji) :** tv.b4, tv.b6, tv.b9, tv.b7 (TV Trwam, TV Republika, Polsat Sport, TVP Historia) : ten czynnik ma odrobinę mniej oczywistą interpretację. Przede wszystkim skupia dwie najważniejsze stacje telewizyjne o bardziej konserwatywnym. Jednocześnie odnosi się do preferowania Polsat Sport i TVP Historia, co w pewnym stopniu odpowiada wybieraniu bardziej specyficznych programów zamiast typowej rozrywki telewizyjnej. Zostanie nazwany tvconst.
 
 Zapisanie wyników czynnikowych respondentów:
+
 ```{r}
 D.back$tvpop = pca.tv.b$scores[,1]
 D.back$tvcons = pca.tv.b$scores[,2]
@@ -112,17 +123,20 @@ Preferencje względem filmów i kina
 ------------------------------------
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D = D.back[, which(names(D.back)=="movie.a1"):which(names(D.back)=="movie.a10")]
 pairs.panels(D)
 ```
 
 Optymalna ilość wymiarów:
+
 ```{r}
 fa.parallel(D, fa="pc")
 ```
 
 PCA:
+
 ```{r}
 pca.movies = principal(D, nfactors=3, rotate="quartimin")
 pca.movies = fa.sort(pca.movies)
@@ -132,6 +146,7 @@ pca.movies
 Kino noir i kryminały mają bardzo niski zasób zmienności wspólnej, więc zostają usunięta a analiza powtórzona:
 
 PCA:
+
 ```{r}
 D = D[,-which(names(D)=="movie.a8")]
 pca.movies = principal(D, nfactors=3, rotate="quartimin")
@@ -148,6 +163,7 @@ Teraz rozwiązanie jest dobrej jakości (zachowuje 59% wariancji), zatem można 
 **Wymiar III (20% wariancji) :** tv.a6, tv.a9 (komedie romantyczne i komedie) : ten wymiar z pewności związany jest z preferowaniem filmów lżejszych i łatwiejszych w odbiorze. Nazwany zostanie w takim razie movieslight.
 
 Zapisanie wyników czynnikowych respondentów:
+
 ```{r}
 D.back$moviesepic = pca.movies$scores[,1]
 D.back$movieshigh = pca.movies$scores[,2]
@@ -158,12 +174,14 @@ Preferencje wobec książek i literatury
 ---------------------------------------
 
 Przygotowanie danych i korelogrmy dla pozycji:
+
 ```{r}
 D = D.back[,which(names(D.back)=="book.a1"):which(names(D.back)=="book.a10")]
 pairs.panels(D)
 ```
 
 Optymalna liczba wymiarów:
+
 ```{r}
 fa.parallel(D, fa="pc")
 ```
@@ -171,6 +189,7 @@ fa.parallel(D, fa="pc")
 Symulacja sugeruje rozwiązanie 3-wymiarowe, ale jak widać na wykresie 4-ty wymiar jest minimalnie poniżej wartości dla zmiennych losowych.
 
 PCA:
+
 ```{r}
 pca.books = principal(D, nfactors=3, rotate="quartimin")
 pca.books = fa.sort(pca.books)
@@ -180,6 +199,7 @@ pca.books
 Widać, że aż dwie pozycje (book.a2 i book.a8) mają dosyć niskie zasoby zmienności wspólnej. Jednocześnie wiadomo, że rozwiązanie 4-czynnikowe również może być dobre, daltego warto je sprawdzić.
 
 PCA:
+
 ```{r}
 pca.books = principal(D, nfactors=4, rotate="quartimin")
 pca.books = fa.sort(pca.books)
@@ -189,6 +209,7 @@ pca.books
 Teraz zasoby zmienności wspólnej są dosyć wysokie, ale book.a1 (biografie i książki historyczne) nie ma jednoznacznie przypisanego dominującego wymiaru, więc warto powtórzyć analizę bez tej pozycji.
 
 PCA:
+
 ```{r}
 D = D[, -which(names(D)=="book.a1")]
 pca.books = principal(D, nfactors=4, rotate="quartimin")
@@ -206,6 +227,7 @@ Teraz rozwiązanie jest dobrej jakości (zachowuje 66% wariancji), zatem można 
 **Wymiar IV (12% wariancji) :** book.a2 (fantasy, science-fiction) : ten wymiar tworzony jest przez tylko jedną pozycję, jaką są książki fantasy i science-fiction. Odpowiada oczywiście silnym preferencjm w tym zakresie. Nazwany zostaje booksfant.
 
 Zapisanie wyników czynnikowych respondentów:
+
 ```{r}
 D.back$bookshigh = pca.books$scores[,1]
 D.back$bookslow = pca.books$scores[,2]
@@ -219,6 +241,7 @@ Preferencje względem prasy
 **Bateria:** press.a1 do press.a7 - preferencje względem rodzajów prasy
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D = D.back[, which(names(D.back)=="press.a1"):which(names(D.back)=="press.b10")]
 D.a = D[, 1:which(names(D)=="press.a7")]
@@ -226,6 +249,7 @@ pairs.panels(D.a)
 ```
 
 Optymalna liczba czynników:
+
 ```{r}
 fa.parallel(D.a, fa="pc")
 ```
@@ -233,6 +257,7 @@ fa.parallel(D.a, fa="pc")
 Symulacja wskazuje na jeden wymiar, ale rozwiązanie dwuwymiarowe również wygląda na prawdopodobne.
 
 PCA:
+
 ```{r}
 pca.press.a = principal(D.a, nfactors=1, rotate="quartimin")
 pca.press.a
@@ -241,7 +266,7 @@ pca.press.a
 Występują ekstremalnie niskie zasoby zmienności wspólnej. Należy powtórzyć analizę z rozwiązaniem dwuwymiarowym.
 
 PCA:
-PCA:
+
 ```{r}
 pca.press.a = principal(D.a, nfactors=2, rotate="quartimin")
 pca.press.a = fa.sort(pca.press.a)
@@ -255,6 +280,7 @@ Teraz rozwiązanie jest dobre jakości (zachowuje 54% wariancji) i można zatem 
 **Wymiar II (16% wariancji) :** press.a2, press.a1, -press.a7 (prasa hobbystyczna/branżowa, prasa popularno-naukowa, -tabloidy) (- oznacza silną ujemną korelację z czynnikiem) : ten wymiar zdaje się jednoznacznie odpowiadać preferowaniu prasy służącej zdobywaniu konkretnych informacji i wiedzy.
 
 Zapisanie wyników czynnikowych respondentów:
+
 ```{r}
 D.back$pressgen = pca.press.a$scores[,1]
 D.back$pressknow = pca.press.a$scores[,2]
@@ -263,12 +289,14 @@ D.back$pressknow = pca.press.a$scores[,2]
 **Bateria:** tv.b1 do tv.b10 - preferencje względem konkretnych polskich tytułów prasowych
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D.b = D[, which(names(D)=="press.b1"):which(names(D)=="press.b10")]
 pairs.panels(D.b)
 ```
 
 Optymalna liczba wymiarów:
+
 ```{r}
 fa.parallel(D.b, fa="pc")
 ```
@@ -276,6 +304,7 @@ fa.parallel(D.b, fa="pc")
 Jak widać symulacja sugeruje dwa rozwiązania, ale rozwiązanie 3-wymiarowe również może być dobre.
 
 PCA:
+
 ```{r}
 pca.press.b = principal(D.b, nfactors=2, rotate="quartimin")
 pca.press.b = fa.sort(pca.press.b)
@@ -285,6 +314,7 @@ pca.press.b
 press.b3 i press.b10 (Forbes i Focus) mają bardzo niskie zasoby zmienności wspólnej. Sugeruje, to że rozwiązanie trójwymiarowe może być lepsze.
 
 PCA:
+
 ```{r}
 pca.press.b = principal(D.b, nfactors=3, rotate="quartimin")
 pca.press.b = fa.sort(pca.press.b)
@@ -300,6 +330,7 @@ Jak widać teraz rozwiązanie jest wysokiej jakości (zachowuje 70% wariancji), 
 **Wymiar III (16% wariancji) :** press.b3, press.b10 (Forbes, Focus) : ten wymiar wydaje się odpowiadać preferowaiu prasy specjalistycznej, która nie posiada politycznej linii redakcyjnej żadnego rodzaju.
 
 Zapisanie wyników czynnikowych dla respondentów:
+
 ```{r}
 D.back$presscons = pca.press.b$scores[,1]
 D.back$presslib = pca.press.b$scores[,2]
@@ -311,17 +342,20 @@ Preferencje względem muzyki
 -----------------------------
 
 Przygotowanie danych i korelogramy dla pozycji:
+
 ```{r}
 D = D.back[, which(names(D.back)=="music.a1"):which(names(D.back)=="music.a14")]
 pairs.panels(D)
 ```
 
 Optymalna liczba wymiarów:
+
 ```{r}
 fa.parallel(D, fa="pc")
 ```
 
 PCA:
+
 ```{r}
 pca.music = principal(D, nfactors=4, rotate="quartimin")
 pca.music = fa.sort(pca.music)
@@ -331,6 +365,7 @@ pca.music
 Jak widać music.a11 (muzyka pop) ma bardzo niskie zasoby zmienności wspólnej, w związku z czym zostanie usunięta a analiza powtórzona:
 
 PCA:
+
 ```{r}
 D = D[, -which(names(D)=="music.a11")]
 pca.music = principal(D, nfactors=4, rotate="quartimin")
@@ -349,6 +384,7 @@ Teraz rozwiązanie jest dobrej jakości (zachowuje 61% wariancji), zatem można 
 **Wymiar IV (11% wariancji) :** music.a3, music.a9, music.a6 (blues, hip-hop, reggae) : ten wymiar dosyć wyraźne odpowiada preferncji względem szeroko pojętej czarnej muzyce. Zostaje nazwany musicafro.
 
 Zapisanie wyników czynnikowych dla respondentów:
+
 ```{r}
 D.back$musichigh = pca.music$scores[,1]
 D.back$musicmodern = pca.music$scores[,2]

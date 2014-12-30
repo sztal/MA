@@ -2,7 +2,9 @@
 title: "Kapitał społeczny - poprawione skale"
 author: "Szymon Talaga"
 date: "16.12.2014"
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 Raport przedstawia drugie podejście do skalowania kapitału społecznego. Zmiana strategii skalowania została wymuszona tym, że otrzymane skale, choć dobrej jakości pod względem zgodności z modelem mokkena, były obciążone bardzo poważną skazą - były zbyt łatwe i nie dyskryminowały między osobami o wysokim kapitale. Dlatego zastosowano trochę inne podejście, ale oparte na wynikach pierwszej procedury skalowania, które ma temu zaradzić.

@@ -2,7 +2,9 @@
 title: "Aktywność obywatelska - skala mokkena"
 author: "Szymon Talaga"
 date: "11.12.2014"
-output: html_document
+output:
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 Raport przedstawia procedure skalowania aktywności obywatelskiej/społecznej (socact1 do socact14) w oparciu o jednowymiarowy nieparametryczny model Mokkena. Tak samo jak w przypadku innych raportów i skryptów poprawne wykonanie wszystkich przedstawionych tu procedur jest uzależnione od poprawnej struktury systemu plików (katalogów).
