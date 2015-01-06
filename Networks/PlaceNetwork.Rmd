@@ -1,0 +1,102 @@
+---
+title: "Sieć Miejsc"
+author: "Szymon Talaga"
+date: "06.01.2015"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+Raport ten przedstawia analize właściwości strukturalnych sieci relacji pomiędzy miejscami. 
+
+Wczytanie danych, funkcji i pakietów:
+
+```{r, message=FALSE}
+library(dplyr)
+library(lattice)
+library(latticeExtra)
+library(psych)
+library(igraph)
+library(reshape2)
+library(doBy)
+source("Places/PlacesHelper.R")
+source("HelperFunctionsMisc/ComputingMisc.R")
+source("Networks/NetworkMethods.R")
+
+load("Networks/IncidenceMatrix.RData")
+load("Places/PlaceData.RData")
+AM = t(AM) %*% AM
+```
+
+Stworzenie grafu sieci:
+
+```{r}
+Gp = graph.adjacency(AM, mode="undirected", weighted=TRUE, diag=FALSE, add.rownames=TRUE)
+```
+
+Rozkład stopni wierzchołków:
+
+```{r}
+dd = degree(Gp) # maybe it is scale-free?
+Pdat$connections = dd
+histogram(Pdat$connections, xlab="Stopień wierzchołka")
+```
+
+Jak widać rozkład jest mocno skośny, ale nie jest pewne czy można mówić o jego potęgowości. Warto przeprowadzić test:
+
+```{r}
+fit = power.law.fit(Pdat$connections, xmin=1, implementation="plfit")
+fit
+```
+
+Jak widać rozkład nie jest potęgowy. Nie zmienia to jednak faktu, że jest silnie skośny. Co więcej analiza wykresu kwantylowego wskazuje, że w tym przypadku mamy raczej do czynienia z rozkładem lognormalnym:
+
+```{r}
+qqnorm(log(Pdat$connections+1))
+```
+
+Wizualizacja sieci:
+
+```{r, echo=FALSE, fig.width=8, fig.height=8}
+V(Gp)$label.color = rgb(0,0,.2,.5)
+V(Gp)$label.cex = .3
+V(Gp)$connections = dd
+V(Gp)$size = 1+sqrt(dd)
+V(Gp)$frame.color = rgb(.5,0,0,.5)
+V(Gp)$color = rgb(.6,1,.6,.5)
+V(Gp)$label = NA
+V(Gp)$label.color = rgb(0,0,0,.75)
+# Some cosmetics for edges
+E(Gp)$color = rgb(.75,.75,.75,.5)
+lay3 <- layout.kamada.kawai(Gp, coolexp=1.5, niter=1000, area=vcount(Gp)^3.5)
+par(mar=c(2,2,2,2))
+plot(Gp, layout=lay3)
+```
+
+Widać wyraźnie, że w tym przypadku występuje o wiele więcej słabo połączonych obiektów, niż miało to miejsce w przypadku sieci połączeń między respondentami.
+
+Współczynnik gronowania:
+
+```{r}
+trans.g = transitivity(Gp, type="global")
+```
+
+Jak widać w tym przypadku jest on o wiele niższy.
+
+Analiza społeczności w sieci:
+
+```{r}
+comm = edge.betweenness.community(Gp, weights=E(Gp)$weights, directed=FALSE)
+Pdat$netcomm = comm$membership
+table(Pdat$netcomm)
+```
+
+Jak widać w tym przypadku sytuacja jest podobna - jedno skupienie dominuje. Nie jest jednak ona tak wyraźna, jak poprzednio, dlatego nie będzie dalej analizowana.
+
+Zaiast tego warto zwrócić uwagę na asortatywność tej sieci:
+
+```{r}
+assortativity.degree(Gp)
+```
+
+Jak widać charakteryzuje się ona delikatną dysasortatywnością. Do sprawdzenia jej istoności konieczne będzie zastosowanie testu permutacyjnego.

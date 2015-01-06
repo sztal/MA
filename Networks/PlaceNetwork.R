@@ -123,7 +123,7 @@ alpha.mle = fit$alpha
 alpha.mle.se = (alpha.mle - 1) / sqrt(n)
 C = alpha.mle - 1
 # Graph with fitted xmin
-x = Pdat$connections
+x = Pdat$betweenness
 xpr = mapPr(x)
 n = length(x)
 xyplot(xpr ~ x, xlab="Connections (X)", ylab="P(X)",
