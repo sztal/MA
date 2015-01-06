@@ -1,0 +1,120 @@
+---
+title: "SiećRespondentów-Raport"
+author: "Szymon Talaga"
+date: "30.12.2014"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+Raport omawia najważniejsze właściwości sieci relacji między respondentami stworzonej na bazie zbiorów wskazywanych przez nich miejsc. Jednym z kluczowych elementów przedstawionej tu analizy jest dostarczenie dowodu na trafność teoretyczną całej zastosowanej w badaniu metodologii. Dowód ten będzie oparty na założeniu, że jeżeli faktycznie relacje wynikające z wybieranych przez respondnetów miejsc są istotne, to struktura samej sieci oraz pozycje resondentów w niej powinny pozostawać w związku z ich (respondentów) charakterystyką społeczno-kulturową.
+
+Wczytanie zbiorów danych i niezbędnych funkcji:
+
+```{r, message=FALSE}
+library(dplyr)
+library(lattice)
+library(latticeExtra)
+library(psych)
+library(igraph)
+library(reshape2)
+source("../Places/PlacesHelper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+source("../Networks/NetworkMethods.R")
+
+load("../Networks/IncidenceMatrix.RData")
+load("../MainData/MainData12.RData")
+D.back = D
+
+IM = AM
+AM = IM %*% t(IM)
+```
+
+Stworzenie grafu sieci:
+
+```{r}
+Gp = graph.adjacency(AM, mode="undirected", weighted=TRUE, diag=FALSE, add.rownames=TRUE)
+```
+
+Zapisanie stopni wierzchołków - czyli ilości połączeń poiędzy badanymi i innymi osobami. Dodatkowo narysowany zostaje histogram ich rozkładu. 
+
+
+```{r}
+dd = degree(Gp)
+D$connections = dd
+histogram(dd, xlab="liczba połączeń")
+```
+
+Jak widać rozkład jest wyraźnie nie-potęgowy. Wskazuje to na stosunkowo "normalne" właściwości strukturalne tej sieci.
+
+Wizualizacja sieci:
+
+```{r, echo=FALSE}
+V(Gp)$label.color = rgb(0,0,.2,.5)
+V(Gp)$label.cex = .3
+V(Gp)$connections = dd
+V(Gp)$size = 1+sqrt(dd)
+V(Gp)$frame.color = rgb(.1,.1,.8,.5)
+V(Gp)$color = rgb(.8,.2,0,.5)
+V(Gp)$label = NA
+# Some cosmetics for edges
+E(Gp)$color = rgb(.3,.3,0,.1)
+lay3 <- layout.kamada.kawai(Gp, coolexp=1.5, niter=1000, area=vcount(Gp)^3.5)
+par(mar=c(2,2,2,2))
+plot(Gp, layout=lay3)
+```
+
+Globalny współczynnik gronowania:
+
+```{r}
+trans.g = transitivity(Gp, type="global")
+```
+
+Wyniosł on `r round(trans.g, 2)`. Wskazuje to na dużą gęstość połączeń w sieci.
+
+Analiza społeczności w sieci:
+
+```{r}
+comm = edge.betweenness.community(Gp, weights=E(Gp)$weights, directed=FALSE)
+comm.dist = table(comm$membership)
+memb.fac = comm$membership
+memb.fac[memb.fac > 1] = 2
+D$netcomm = as.factor(memb.fac)
+levels(D$netcomm) = c("Main", "None")
+chisq.test(table(D$netcomm, D$cluster))
+```
+
+Analiza społeczności w sieci w oparciu o współczynnik pośrednictwa. Analiza pokazuje, że jest jedno wielkie główne skupienie, zaś wszystkie pozostałe osoby, tworzą odrębne, jednoosobowe społeczności. Wobec tego warto zaklasyfikować je do jednej grupy. Warto jednak zaznaczyć, że przynależność do głównego skupienia nie jest skorelowana z przynależności do żadnego ze skupień kulturowych.
+
+Warto przyjrzeć się za to różnicom pomiędzy osobami z głównego skupienia a pozostałymi pod względem wielu zmiennych społeczych:
+
+```{r}
+t.test(places ~ netcomm, data=D) # significant (duh!)
+t.test(resmob ~ netcomm, data=D) # not significant
+t.test(soccont ~ netcomm, data=D) # significant
+t.test(ent_avg ~ netcomm, data=D) # significant!
+t.test(fullent ~ netcomm, data=D) # significant
+t.test(cultcap ~ netcomm, data=D) # significant!
+t.test(connections ~ netcomm, data=D) # significant (duh!)
+t.test((-can1) ~ netcomm, data=D) # significant!
+t.test(can2 ~ netcomm, data=D) # not significant
+t.test(civic ~ netcomm, data=D) # not significant
+t.test(age ~ netcomm, data=D) # significant
+t.test(income ~ netcomm, data=D) # not significant
+t.test(attgen ~ netcomm, data=D) # significant!
+t.test(attgiven ~ netcomm, data=D) # not significant
+t.test(attdiscovered ~ netcomm, data=D) # significant
+t.test(attnoatt ~ netcomm, data=D) # not significant
+```
+
+Jak widać jest bardzo dużo istotnych i wysoce interesujących efektów. Jest to bardzo ważny wynik, bo jest centralnym dowodem potwierdzającym teoretyczną trafność zaproponowanej w pracy autorskiej metody pomiaru i badania przestrzeni społecznej w oparciu o miejsca.
+
+Miara asortatywności sieci:
+
+```{r}
+V(Gp)$cluster = D$cluster
+assortativity.degree(Gp, directed=FALSE) # no correlation
+assortativity.nominal(Gp, type=D$cluster, directed=FALSE) # no correlation
+```
+
+Jak widać zarówno asortatywność oparta na stopniach wierzchołków jak i przynalezności do skupień kulturowych właściwie nie występuje.
