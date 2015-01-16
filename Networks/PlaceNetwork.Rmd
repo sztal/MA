@@ -19,12 +19,12 @@ library(psych)
 library(igraph)
 library(reshape2)
 library(doBy)
-source("Places/PlacesHelper.R")
-source("HelperFunctionsMisc/ComputingMisc.R")
-source("Networks/NetworkMethods.R")
+source("../Places/PlacesHelper.R")
+source("../HelperFunctionsMisc/ComputingMisc.R")
+source("../Networks/NetworkMethods.R")
 
-load("Networks/IncidenceMatrix.RData")
-load("Places/PlaceData.RData")
+load("../Networks/IncidenceMatrix.RData")
+load("../Places/PlaceData.RData")
 AM = t(AM) %*% AM
 ```
 
@@ -100,3 +100,12 @@ assortativity.degree(Gp)
 ```
 
 Jak widać charakteryzuje się ona delikatną dysasortatywnością. Do sprawdzenia jej istoności konieczne będzie zastosowanie testu permutacyjnego.
+
+Test permutacyjny (kod zawarty w pliku "NetworkMethods.R"):
+
+```{r}
+set.seed(1111) # ustawienie ziarna generatora liczb losowych
+permtest(AM, n=1000, FUN=assortativity.degree)
+```
+
+Jak widać sieć empiryczna jest istotnie mniej dysasortatywna niż losowa sieć o takim samym lognormalnym rozkładzie wierzchołków (ale wciąż jest dysasortatywna).
