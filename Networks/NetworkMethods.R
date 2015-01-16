@@ -34,3 +34,40 @@ mapPr <- function(x) {
       }
       return(xpr)
 }
+
+# This function randomly permutes edges of vertices in a graph; for technical reasons it takes only adjacency matrices as arguments (normal matrix object)
+permuteEdges <- function(AM) {
+      diagonal = diag(AM)
+      n = dim(AM)[1]
+      m = dim(AM)[2]
+      for(i in 1:(n-1)) {
+            mapvec = (i+1):n
+            len = length(mapvec)
+            vec = as.numeric(AM[i, mapvec])
+            if(len > 1) permvec = sample(vec, size = len, replace = FALSE)
+            else permvec = vec
+            AM[i, mapvec] = permvec
+            zerovec = 1:i
+            AM[i, zerovec] = 0
+      }
+      AM[n, ] = 0
+      AM = AM + t(AM) + diag(diagonal)
+      return(AM)
+}
+            
+            
+
+# This function uses permuteEdges routine to compute nonparametric confidence interval for statistics based on edgelist of a graph
+permtest <- function(AM, n=1000, FUN, ...) {
+      require(igraph)
+      statvec = vector(mode="numeric", length=n)
+      for(i in 1:n) {
+            tmp = permuteEdges(AM)
+            graph = graph.adjacency(tmp, mode="undirected", weighted=TRUE, diag=FALSE, add.rownames=TRUE)
+            stat = FUN(graph, ...)
+            statvec[i] = stat
+      }
+      CI = quantile(statvec, probs = c(.05, .95))
+      return(CI)
+}
+      
