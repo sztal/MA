@@ -1,0 +1,294 @@
+% Codebook
+
+\documentclass[10pt, a4paper]{article}
+% może być użyty dokument typu mwart to article dla polskiej typografii
+\usepackage[latin2]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{fontspec}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{ragged2e}
+\usepackage{footmisc}
+\usepackage{fancyhdr}
+
+
+% włączam kary dla programu składającego
+% opisy kategorii kar mam w wykładzie numer 4 z TAPPD
+%\hyphenpenalty=150
+%\exhyphenpenalty=250
+\doublehyphendemerits=5000
+\widowpenalty=5000
+\clubpenalty=5000
+\tolerance=75
+\sloppy
+\hfuzz=.1pt
+
+% Wyłączenie przenoszenia wyrazów i ustawienia wyrównania do lewej
+\exhyphenpenalty=10000
+\hyphenpenalty=10000
+\setlength{\parindent}{7mm}
+\setlength{\RaggedRightParindent}{\parindent}
+\RaggedRight
+
+% ustawiam wymiary tekstu
+% robię to na podstawie latexowej klasy wydziału MIM UW
+% parametry horyzontalne
+\textwidth\paperwidth
+\advance\textwidth -55mm
+\oddsidemargin-1in
+\advance\oddsidemargin 25mm
+\evensidemargin-1in
+\advance\evensidemargin 30mm
+\setlength{\marginparsep}{5mm}
+\setlength{\marginparwidth}{15mm}
+% parametry werykalne
+\textheight\paperheight
+\advance\textheight -60mm
+\voffset -1in
+\advance\voffset 15mm
+\topmargin 5mm
+\headsep 10mm
+\setlength{\headwidth}{\textwidth}
+
+% Wyłączenie numeracji stron
+\pagenumbering{gobble}
+\pagestyle{empty}
+
+% Zmniejszenie odstępów między elementami nieuporządkowanych list
+\let\OLDitemize\itemize
+\renewcommand\itemize{\OLDitemize\addtolength{\itemsep}{-6pt}}
+
+
+% Początek struktury dokumentu
+\begin{document}
+
+\begin{center} {\LARGE\bf Opis Zmiennych} \end{center}
+
+\noindent Nazwy zmiennych odpowiadają nazwom kolumn w finalnym zbiorze danych ({\texttt MainData13.RData} i {\texttt MainData13.csv}). W nawiasach obok opisów poziomów zmiennych kategorialnych wymieniono oryginalne kategorie odpowiedzi, które zostały na nie rekodowane.
+
+\paragraph{1. id:} liczba porządkowa identyfikująca osobę badaną. \\
+\paragraph{2. marital:} stan cywilny.
+\begin{itemize}
+	\item {\bf single:} samotny (Wolny)
+	\item {\bf relationship:} w stałym związku formalnym lub nieformalnym (Żonaty / Zamężna; Stały związek nieformalny)
+\end{itemize}
+\paragraph{3. timeWwa:} długość zamieszkiwania w Warszawie (w latach).
+\paragraph{4. edu:} wykształcenie.
+\begin{itemize}
+	\item {\bf <=highschool+tech:} wyksztłacenie średnie lub technikum oraz wszystko poniżej (Niepełne podstawowe lub brak; Podstawowe lub gimnazjalne; Zawodowe; Średnie)
+	\item {\bf BA:} licencjat (Wyższe I stopnia)
+	\item {\bf MA+:} magister lub powyżej (Wyższe II stopnia; Wyższe III stopnia)
+\end{itemize}
+\paragraph{5. eduprog:} rodzaj posiadanego wykształcenia wyższego. Zmienna jest rezultatem ręcznej klasyfikacji odpowiedzi udzielanych przez badanych na otwarte pytanie dotyczące rodzaju posiadanego wykształcenia lub kierunku studiów, na które się uczęszcza.
+\begin{itemize}
+	\item {\bf soc/beh:} nauki społeczne i/lub behawioralne
+	\item {\bf law/biz/menag:} kierunki prawnicze, biznesowe, menadżerskie i ekonomiczne
+	\item {\bf human/lang:} nauki humanistyczne i językoznawcze
+	\item {\bf STEM/med:} nauki ścisłe, przyrodnicze i techniczne oraz medyczne
+	\item {\bf no\_uni\_edu:} brak wyższego wykształcenia
+\end{itemize}
+\paragraph{6. edutime:} wymiar odbieranej edukacji.
+\begin{itemize}
+	\item {\bf fl\_edu:} edukacja w pełnym wymiarze (Tak)
+	\item {\bf no\_fl\_edu:} edukacja w wymiarze niepełnym lub brak (Nie)
+\end{itemize}
+\paragraph{7. worktime:} wymiar wykonywanej pracy.
+\begin{itemize}
+	\item {\bf no\_job:} nie pracuje (pyt. 12. - Nie)
+	\item {\bf job:} pełen etat (pyt. 13. - Pełen etat)
+	\item {\bf flexible:} niepeły etat lub nieregulowany czas pracy (pyt. 13. - Pół etatu; Nieregulowany czas pracy)
+\end{itemize}
+\paragraph{8. fatheredu:} wykształcenie ojca.
+\begin{itemize}
+	\item {\bf <=med:} średnie bądź niższe (Niepełne podstawowe lub brak; Podstawowe lub gimnazjalne; Zawodowe; Średnie)
+	\item {\bf high:} wyższe (Wyższe I stopnia, Wyższe II stopnia; Wyższe III stopnia)
+\end{itemize}
+\paragraph{9. motheredu:} wykształcenie matki.
+\begin{itemize}
+	\item {\bf <=med:} średnie bądź niższe (Niepełne podstawowe lub brak; Podstawowe lub gimnazjalne; Zawodowe; Średnie)
+	\item {\bf high:} wyższe (Wyższe I stopnia, Wyższe II stopnia; Wyższe III stopnia)
+\end{itemize}
+\paragraph{10. grandedu:} Wykształcenie najlepiej wyedukowanego dziadzka / wyedukowanej babci.
+\begin{itemize}
+	\item {\bf <=med:} średnie bądź niższe (Niepełne podstawowe lub brak; Podstawowe lub gimnazjalne; Zawodowe; Średnie)
+	\item {\bf high:} wyższe (Wyższe I stopnia, Wyższe II stopnia; Wyższe III stopnia)
+	\item {\bf don't\_know:} nie wiem (Nie wiem)
+\end{itemize}
+\paragraph{11. income:} dochód (definicja taka jak w kwestionariuszu).
+\paragraph{12. lifestd:} postrzegany poziom życia (definicja taka jak w kwestionariuszu)
+\paragraph{13. cars:} ilość posiadanych samochodów.
+\begin{itemize}
+	\item {\bf no\_car:} brak samochodu (Nie posiadam samochodu)
+	\item {\bf 1car+:} jeden samochów lub więcej (Jeden; Dwa; Więcej niż dwa)
+\end{itemize}
+\paragraph{14. hometype:} rodzaj zajmowanego lokum.
+\begin{itemize}
+	\item {\bf apartment:} mieszkanie (Mieszkanie)
+	\item {\bf other:} inne	(Dom jednorodzinny; Dom wielorodziny; Inne)
+\end{itemize}
+\paragraph{15. homestatus:} status prawny zajmowanego lokum.
+\begin{itemize}
+	\item {\bf family:} własność rodziny (różne odpowiedzi z kategorii Inne)
+	\item {\bf rent:} wynajęte (Wynajmuję je od spółdzielni mieszkaniowejl; Wynajmuję je od osoby prywatnej)
+	\item {\bf own:} własne	(Jest to moja własność)
+\end{itemize}
+\paragraph{16. tv:} posiadanie telewizora w gospodarstwie domowym.
+\begin{itemize}
+	\item {\bf no\_tv:} nie posiada (Nie)
+	\item {\bf tv:} posiada (Tak)
+\end{itemize}
+\paragraph{17. tablet:} posiadanie tabletu.
+\begin{itemize}
+	\item {\bf no\_tablet:} nie posiada (Nie)
+	\item {\bf tablet:} posiada (Tak)
+\end{itemize}
+\paragraph{18. moviefreq:} częstotliwość oglądania filmów (w kinie, na komputecze etc.).
+\begin{itemize}
+	\item {\bf rarely:} rzadko (Rzadziej niż raz w tygodniu; W ogóle nie oglądam) 
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy w miesiącu)
+	\item {\bf often:} często (Codziennie; Kilka razy w tygodniu)
+\end{itemize}
+\paragraph{19. bookfreq:} częstotliwość czytania książek.
+\begin{itemize}
+	\item {\bf rarely:} rzadko (Rzadziej niż raz w tygodniu; W ogóle nie oglądam)
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy w miesiącu)
+	\item {\bf often:} często (Codziennie; Kilka razy w tygodniu)
+\end{itemize}
+\paragraph{20. pressfreq:} częstotliwość czytania prasy.
+\begin{itemize}
+	\item {\bf rarely:} rzadko (Rzadziej niż raz w tygodniu; W ogóle nie oglądam)
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy w miesiącu)
+	\item {\bf often:} często (Codziennie; Kilka razy w tygodniu)
+\end{itemize}
+\paragraph{21. musicfreq:} częstotliwość słuchania muzyki.
+\begin{itemize}
+	\item {\bf not\_everyday:} niecodziennie (Kilka razy w tygodniu; Kilka razy w miesiącu; Rzadziej niż raz w miesiącu; W ogóle nie słucham muzyki)
+	\item {\bf everyday:} codziennie (Codziennie)
+\end{itemize}
+\paragraph{22. theater:} częstotliwość chodzenia do teatru.
+\begin{itemize}
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu; Kilka razy do roku)
+	\item {\bf rarely:} rzadko (Raz do roku; Rzadziej niż raz do roku; Nigdy)
+\end{itemize}
+\paragraph{23. opera:} częstotliwość chodzenia do opery.
+\begin{itemize}
+	\item {\bf never:} nigdy (Nigdy)
+	\item {\bf rarely:} rzadko (Raz do roku; Rzadziej niż raz do roku)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu; Kilka razy do roku)
+\end{itemize}
+\paragraph{24. cinema:} częstotliwość chodzenia do kina.
+\begin{itemize}
+	\item {\bf sometimes:} czasami (Raz do roku; Rzadziej niż raz do roku; Nigdy)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu; Kilka razy do roku)
+\end{itemize}
+\paragraph{25. art:} częstotliwość chodzenia do galerii sztuki, muzeów etc.
+\begin{itemize}
+	\item {\bf rarely:} rzadko (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu; Nigdy)
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy do roku)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu)
+\end{itemize}
+\paragraph{26. livemusic:} częstotliwość chodzenia na konerty, występy muzyczne etc.
+\begin{itemize}
+	\item {\bf rarely:} rzadko (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu; Nigdy)
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy do roku)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu)
+\end{itemize}
+\paragraph{27. club:} częstotliwość chodzenia na imprezy klubowe.
+\begin{itemize}
+	\item {\bf never:} nigdy (Nigdy)
+	\item {\bf rarely:} rzadko (Raz do roku; Rzadziej niż raz do roku)
+	\item {\bf sometimes:} od czasu do czasu (Kilka razy do roku)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu)
+\end{itemize}
+\paragraph{28. sportshow:} częstotliwość chodzenia na wydarzenia sportowe na żywo.
+\begin{itemize}
+	\item {\bf never:} nigdy (Nigdy)
+	\item {\bf rarely:} rzadko (Raz do roku; Rzadziej niż raz do roku)
+	\item {\bf regularly:} regularnie (Przynajmniej raz w tygodniu; Przynajmniej raz w miesiącu)
+\end{itemize}
+\paragraph{29. sportint:} stopień zainteresowania sportem (skala ilościowa; definicja jak w kwestionariuszu).
+\paragraph{30. football:} stopień zainteresowania piłką nożną (skala ilościowa; definicja jak w kwestionariuszu).
+\paragraph{31. bookquant:} ilość posiadanych w gospodarstwie domowym książek.
+\begin{itemize}
+	\item {\bf tens:} dziesiątki [0-99]
+	\item {\bf hundreds:} setki [100-999]
+	\item {\bf thousands:} tysiące [1000+]
+\end{itemize}
+\paragraph{32. cdquant:} ilość posiadanych w gospodarstwie domowym płyt CD z muzyką.
+\begin{itemize}
+	\item {\bf few:} kilka [0-9]
+	\item {\bf tens:} dziesiątki [10-99]
+	\item {\bf hundreds:} setki [100+]
+\end{itemize}
+\paragraph{33. artquant:} ilość posiadanych w gospodarstwie domowych dzieł sztuki.
+\begin{itemize}
+	\item {\bf zero:} brak
+	\item {\bf few:} kilka [0-9]
+	\item {\bf tens+:} dziesiątki [10+]
+\end{itemize}
+\paragraph{34. age:} wiek (w latach)
+\paragraph{35. ISCObroad:} autorska klasyfikacja statusu wykonywanej pracy będąca uproszczeniem systemu ISCO.
+\begin{itemize}
+	\item {\bf no\_job:} bezrobotny
+	\item {\bf low:phys/sale/serv/assoc\_pro:} zawody wymagające stosunkowo niskich kwalifikacji; praca fizyczna; sprzedaż; personel pomocniczy i biurowy; specjaliści niższego szczebla i/lub o niższym stażu; nauczyciele
+	\item {\bf high:mng/pro/self:} zawody wymagające wyższych kwalifikacji i samozatrudnienie; pozycje menadżerskie; specjaliści; wykładowcy akademiccy; wolne zawody etc.
+\end{itemize}
+\paragraph{36. incomeclass:} klasa majątkowa.
+\begin{itemize}
+	\item {\bf low:} niższa (0-2000 złotych dochodu)
+	\item {\bf md/high:} średnia i wyższa (2001+ złotych dochodu)
+\end{itemize}
+\paragraph{37. civic:} aktywność obywatelska. Jest to quasi-ilościowa skala obliczono na podstawie 14 dychotomicznych pozycji odnoszących się do udziale w życiu społeczno-politycznym (kwestionariusz: bloki 56 i 57). Wyskalowana została w oparciu o model Mokkena.
+\paragraph{38. resmob:} kapitał społeczny w ujęciu generatora zasobów\textemdash skala mobilizacji wsparcia (skala quasi-ilościowa). Skonstruowana została w oparciu o optymalnie wybrany podzbiór pytań z bloku 59 w kwestionariuszu. Do skalowania użyto modelu Mokkena dla politomicznych pozycji testowych. Dokładny w raportach poświęconych skalowaniu kapitalu społecznego.
+\paragraph{39. soccont:} kapitał społeczny w ujęciu generatora zasobów\textemdash skala bogactwa kontaktów społecznych (skala quasi-ilościowa). Skonstruowana została w oparciu o optymalnie wybrany podzbiór pytań z bloku 58 w kwestionariuszu. Do skalowania użyto modelu Mokkena dla politomicznych pozycji testowych. Dokładny w raportach poświęconych skalowaniu kapitalu społecznego.
+\paragraph{40. attgen:} ogólna skala przywiązania do Warszawy (kwestionariusz: blok 60). Skalowana w oparciu o klasyczną teorię testów i miarę $\alpha$-Cronbacha. Szczegóły w raporcie poświęconym skalowaniu przywiązania do miejsca.
+\paragraph{41. attgiven:} podskala {\it miejsce zastane} w 3-wymiarowej skali przywiązania do miejsca (kwestionariusz: blok 61). Skalowana w oparciu o klasyczną teorię testów i miarę $\alpha$-Cronbacha. Szczegóły w raporcie poświęconym skalowaniu przywiązania do miejsca.
+\paragraph{42. attdiscovered:} podskala {\it miejsce odkryte} w 3-wymiarowej skali przywiązania do miejsca (kwestionariusz: blok 61). Skalowana w oparciu o klasyczną teorię testów i miarę $\alpha$-Cronbacha. Szczegóły w raporcie poświęconym skalowaniu przywiązania do miejsca.
+\paragraph{43. attnoatt:} podskala {\it brak przywiązania} w 3-wymiarowej skali przywiązania do miejsca (kwestionariusz: blok 61). Skalowana w oparciu o klasyczną teorię testów i miarę $\alpha$-Cronbacha. Szczegóły w raporcie poświęconym skalowaniu przywiązania do miejsca.
+\paragraph{44. tvinfo:} skala stosunku względem telewizji informacyjnych. Oparta o pytania z bloku 29 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{45. tvlowbrow:} skala stosunku względem prostych i niewymagających programów telewizyjnych\textemdash głównie rozrywkowych. Oparta o pytania z bloku 29 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{46. tvhhighbrow:} skala stosunku względem bardziej wymagających programów telewizyjnych przynależących do tzw. {\it kultury wysokiej}. Oparta o pytania z bloku 29 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{47. tvpop:} skala stosunku względem największych i najpopularniejszych stacji telewizyjnych w Polsce. Oparta o pytania z bloku 30 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{48. tvcons:} skala stosunku względem największych stacji o profilu konserwatywnym w Polsce. Oparta o pytania z bloku 30 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{49. moviesepic:} skala stosunku wobec filmów opowiadających epickie\textemdash często fantastyczne lub fantastyczno-naukowe \textemdash historie. Oparta o pytania z bloku 32 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{50. movieshigh:} skala stosunku wobec kina wyższego\textemdash artystycznego, alternatywnego, dramatów etc. Oparta o pytania z bloku 32 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{51. movieslight:} skala stosunku wobec lżejszych gatunków filmowych takich jak komedie, komedie romantyczne i musicale. Oparta o pytania z bloku 32 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{52. bookshigh:} skala stosunku wobec współczesnej literatury wysokiej i klasycznego kanony literackiego. Oparta o pytania z bloku 35 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{53. bookslow:} skala stosunku wobec prostszy i bardziej przystępnych form literackich takich jak kryminały, romanse i popularna beletrystyka. Oparta o pytania z bloku 35 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{54. booksknow:} skala stosunku wobec literatury faktu, popularno-naukowej oraz poradników i podręczników różnego rodzaju. Oparta o pytania z bloku 35 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{55. booksfant:} skala stosunku wobec literatury fantasy i fantastyki-naukowej. Oparta o pytania z bloku 35 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{56. pressgen:} skala stosunku wobec prasy ogólnej\textemdash dzienników, tygodników opinii etc. Oparta o pytania z bloku 38 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{57. pressknow:} skala stosunku wobec prasy informacyjnej i popularno-naukowej oraz branżowej i hobbystycznej. Oparta o pytania z bloku 38 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{58. presscons:} skala stosunku wobec wybranych polskich tytułów prasowych o profilu konserwatywnym. Oparta o pytania z bloku 39 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{59. presslib:} skala stosunku wobec wybranych najpopularniejszych polskich tytułów prasowych głównego nurtu. Oparta o pytania z bloku 39 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{60. pressspec:} skala stosunku wobec wybranych specjalistyczno-branżowych i biznesowych polskich tytułów prasowych. Oparta o pytania z bloku 39 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{61. musichigh:} skala stosunkow wobec bardziej wysublimowanych gatunków muzycznych\textemdash muzyki klasycznej, jazzu, bluesa etc. Oparta o pytania z bloku 41 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{62. musicmodern:} skala stosunku wobec nowoczesnych gatunków muzycznych takich jak: house, techno i ogólnie szeroko pojęta muzyka elektroniczna. Oparta o pytania z bloku 41 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{63. musicrock:} skala stosunku wobec muzyki rockowej i pokrewnej. Oparta o pytania z bloku 41 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{64. musicafro:} skala stosunku wobec szeroko pojętej muzyki czarnej / afroamerykańskiej. Oparta o pytania z bloku 41 w kwestionariuszu. Jest to skala ilościowa obliczono w oparciu o rozwiązanie analizy czynnikowej. Szczegóły w raporcie dotyczącym skalowania ilościowych pytań o preferencje kulturalne.
+\paragraph{65. cultcap:} skala tradycyjnie rozumianego ogólnego kapitału kulturowego. Wyniki obliczono jako współrzędne respodnentów w przestrzeni rozwiązania wielokrotnej analizy korepondncji na kategorialnych pytaniach dotyczących preferencji kulturalnych. Szczegóły w raporcie dotyczącym przeprowadzonych analiz korepondencji.
+\paragraph{66. lifestab:} skala stabilności materialno-życiowej.  Wyniki obliczono jako współrzędne (wymiar I) respodnentów w przestrzeni rozwiązania wielokrotnej analizy korepondncji na zmiennych demograficznych i socjoekonomicznych.
+\paragraph{67. wealth:} skala posiadania dóbr wysokiej wartości (nieruchomości, samochodów etc.). Wyniki obliczono jako współrzędne (wymiar II) respodnentów w przestrzeni rozwiązania wielokrotnej analizy korepondncji na zmiennych demograficznych i socjoekonomicznych.
+\paragraph{68. cluster:} przynależność do jednej z klas wyłonionych na podstawie analizy skupień. Szczegóły w odpowiednim raporcie.
+\begin{itemize}
+	\item {\bf Wolne\_Zawody:} skupienie grupujące osoby o podwyższonym kapitle kulturowym, które w większej części związane są z wolnymi zawodami i/lub wykształceniem w zakresie nauk społecznych i behawioralnych oraz humanistycznych
+	\item {\bf Studenci:} skupienie grupujące osoby o niższym kapitale kulturowym, które zwykle wywodzą się z trochę lepiej sytuowanej klasy średniej. Przeważają wśród nich osoby związane z kierunkami ekonomiczno-biznesowymi. Duża część jest nieaktywna zawodowa, lecz pomimo to charakteryzuje się dosyć wysokim stanem posiadania dóbr wysokiej wartości.
+	\item {\bf Kulturalnie\_wycofani:} osoby o średnim kapitale kulturowym, które są równocześnie mało aktywne w zakresie typowej konsumpcji kultury. Do tej grupy przynależą osoby o różnym wykształceniu.
+\end{itemize}
+\paragraph{69. can1:} współrzędna respondenta w pierwszym wymiarze przestrzeni generowanej przez kanoniczne funkcje dyskryminacyjne służące separacji klas wygenerowanych w analizie skupień. Szczegóły w raporcie dotyczącym analizy skupień.
+\paragraph{70. can2:} współrzędna respondenta w drugim wymiarze przestrzeni generowanej przez kanoniczne funkcje dyskryminacyjne służące separacji klas wygenerowanych w analizie skupień. Szczegóły w raporcie dotyczącym analizy skupień.
+\paragraph{71. ent\_total:} suma entropii rozkładów typów gości wszystkich miejsc odwiedzanych przez danego respondenta miejsc. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego. Ostatecznie nie używana w badaniu.
+\paragraph{72. ent\_avg:} średnia entropia rozkładów typów gości wszystkich mejsc odwiedzanych przez danego respondenta miejsc. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego.
+\paragraph{73. ent\_wgh:} ważona średnia entropia rozkładów typów gości wszystkich mejsc odwiedzanych przez danego respondenta miejsc. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego. Ostatecznie nie używana w badaniu.
+\paragraph{74. ent\_max:} maksymalna entropia rozkładów typów gości wszystkich mejsc odwiedzanych przez danego respondenta miejsc. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego. Ostatecznie nie używana w badaniu.
+\paragraph{75. ent\_min:} minimalna entropia rozkładów typów gości wszystkich mejsc odwiedzanych przez danego respondenta miejsc. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego. Ostatecznie nie używana w badaniu.
+\paragraph{76. places:} ilość wskazanych miejsc.
+\paragraph{77. fullent:} entropia rozkładu typów wszystkich osób odwiedzających te same miejsca, co dany respondent. Szczegóły w raporcie dotyczącym entropijnych wskaźników różnorodności otoczenia społecznego. Ostatecznie nie używana w badaniu.
+\paragraph{78. connections:} liczba osób chodzących do tych samych miejsc, co dany respondent. Obliczana na podstawie sieci badani\textendash badani. Szczegóły w raporcie dotyczącym odpowiedniej sieci.
+\paragraph{79. netcomm:} przynależność do jednej z dwóch głównych grup wyłonionych w ramach hierarchicznej analizy skupień przeprowadzonej na sieci połączeń badani\textendash badani.
+\begin{itemize}
+	\item {\bf Main:} największe bardzo silnie połączona społeczność w sieci grupująca osoby o dużej ilości połączeń (wysokie wartości zmiennej {\it connections}.
+	\item {\bf None:} sztucznie utworzone skupienie, które grupuje wszystkie pozostałe osoby, ponieważ tworzyły one 1-2 osobowe mini społeczności. Zasadniczo przynależą do niej respondenci o niższych wartościachh {\it connections}.
+\end{itemize}
+
+\end{document}
