@@ -1,5 +1,12 @@
 # These are various computing functions of general utility
 
+# Helper function that computes sum or fraction of NAs for every variable in a dataset
+numNA <- function(x, frac=FALSE, n=FALSE) { 
+      if(frac) return(mean(is.na(x)))
+      else if(n) return(length(x) - sum(is.na(x)))
+      else return(sum(is.na(x)) )
+}
+
 # Dominant value of a vector
 domin <- function(x) {
       Tab = table(x)
@@ -67,10 +74,9 @@ center <- function(x, norm=FALSE, na.rm=TRUE) {
       return(x)
 }
 
-makeGrid <- function(x, y, len=length(x)) {
-      x = sort(rep(x, len))
-      y2 = y
-      y = vector(mode="numeric", length=len^2)
-      for(i in 1:len) y[((i-1)*len+1):(i*len)] = y2
-      return(cbind(x, y))
+# This function rescales a variable to have a specific range and min and max values
+rescale <- function(x, min, max) {
+      return((x -  min(x)) * ((max - min) / (max(x) - min(x))) + min)
 }
+
+(x - min) * ((UB - LB) / (max - min)) + LB
