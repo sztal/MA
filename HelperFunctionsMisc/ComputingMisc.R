@@ -78,5 +78,3 @@ center <- function(x, norm=FALSE, na.rm=TRUE) {
 rescale <- function(x, min, max) {
       return((x -  min(x)) * ((max - min) / (max(x) - min(x))) + min)
 }
-
-(x - min) * ((UB - LB) / (max - min)) + LB
