@@ -85,7 +85,7 @@ Jako że kapitał kulturowy tworzy tylko jeden wymiar, to możliwe jest liniowe 
 ```{r, echo=FALSE, fig.height=8, fig.width=8}
 ans = cc.mca$levelnames
 coords = -cc.mca$rowpcoord[,1]
-dotplot(reorder(ans, coords) ~ coords, xlab="Kapitał kulturowy")
+dotplot(reorder(ans, coords) ~ coords, xlab="Ładunek kapitału kulturowego")
 ```
 
 MCA dla zmiennych związanych ze statusem socjoekonomicznym i demografią
