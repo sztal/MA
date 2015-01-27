@@ -78,3 +78,20 @@ center <- function(x, norm=FALSE, na.rm=TRUE) {
 rescale <- function(x, min, max) {
       return((x -  min(x)) * ((max - min) / (max(x) - min(x))) + min)
 }
+
+# This function computes expectated frequencies for a contingency tables. It takes two table objet with marginal distributions as arguments (or just two variable vectors).
+expected <- function(x, y) {
+      if(class(x) != "table") x = table(x)
+      if(class(y) != "table") y = table(y)
+      nx = length(x)
+      ny = length(y)
+      n = sum(x)
+      Exp = matrix(0, ncol=ny, nrow=nx)
+      vecx = as.vector(x)
+      vecy = as.vector(y)
+      Exp = (x %*% t(y)) / n
+      rownames(Exp) = names(x)
+      colnames(Exp) = names(y)
+      return(Exp)
+}
+                  
