@@ -117,7 +117,7 @@ scale.ga.kdiff = aisp(D.kdiff, search="ga", lowerbound=.35)
 D.kdiff = D.kdiff[, rownames(scale.ga.kdiff)[scale.ga.kdiff[,1]==1]]
 ```
 
-Wybrane pytania odnoszą się do znajomości osóby, która: pracuje w redakcji radia/gazety/telewizji itp. (2); jest muzkiem / dj'em (9); zna osobiście osoby rozpoznawalne z gazet/telewizji (14); zna się na sztuce/literaturze (15). Bezsprzeczną zaletą nowego podziału na skale jest to, że skala druga ewidentnie odnosi się do innego wymiaru kapitału społecznego. Mobilizacja zasobów dotyczy przede wszystkim możliwości otrzymania konkretnej i dosyć specyficznej pomocy, podczas gdy skala kontaktów społecznych odnosi się do miększego rodzaju kapitału, który jest związany przede wszystkim ze znajomością specyficznych i/lub popularnych/prestiżownych osób.
+Wybrane pytania odnoszą się do znajomości osóby, która: pracuje w redakcji radia/gazety/telewizji itp. (2); jest muzkiem / dj'em (9); zna osobiście osoby rozpoznawalne z gazet/telewizji (14); kto zna się na sztuce/literaturze (15). Bezsprzeczną zaletą nowego podziału na skale jest to, że skala druga ewidentnie odnosi się do innego wymiaru kapitału społecznego. Mobilizacja zasobów dotyczy przede wszystkim możliwości otrzymania konkretnej i dosyć specyficznej pomocy, podczas gdy skala kontaktów społecznych odnosi się do miększego rodzaju kapitału, który jest związany przede wszystkim ze znajomością specyficznych i/lub popularnych/prestiżownych osób.
 
 Homogeniczna monotoniczność:
 
@@ -168,4 +168,4 @@ histogram(~ soccont, data=D10, xlab="Kontakty społeczne")
 
 Dlatego też nowe wersje skali zostaną użyte w dalszych analizach. Jest to podyktowane przede wszystkim tym, że będą one użyte w analizach opartych na współczynnikach korelacji, a jak wiadomo ucięte rozkłady i ograniczenia wariancji zmiennych bardzo silnie zaniżają ich wartości.
 
-**Koniec raporty**
+**Koniec raportu**

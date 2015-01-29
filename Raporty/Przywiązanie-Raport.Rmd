@@ -48,7 +48,7 @@ Teraz skale odpowiedzi są poprawne. Jak widać skala osiąga bardzo wysoką rze
 Rozkład wyników skali:
 
 ```{r, echo=FALSE}
-attgen = apply(D, 1, sum)
+attgen = apply(D, 1, mean)
 histogram(~attgen, xlab="Przywiązanie do miejsca")
 ```
 

@@ -433,12 +433,13 @@ Test M Boxa równości macierzy wariancji-kowariancji:
 boxM(D.s[,1:29], D.s$cluster)
 ```
 
-Macierze nie są homogeniczne. To też nie powinno dziwić, ponieważ: 1) jest duża zmiennych; 2) nie ma wielowymiarowego rozkładu normalnego, a tym przypadku test Boxa prawie zawsze daje istotne wyniki.
+Macierze nie są homogeniczne. To też nie powinno dziwić, ponieważ: 1) jest dużo zmiennych; 2) nie ma wielowymiarowego rozkładu normalnego, a tym przypadku test Boxa prawie zawsze daje istotne wyniki.
 
 Pomimo braku pewności co do spełnienia założeń analiza dyskryminacyjna zostanie przeprowadzona. Jej cel jest głównie eksploracyjny, więc nawet jeżeli wyniki będą w jakiś sposób lekko zniekształcone, to nie będzie to miało wpływu na dalsze analizy.
 
 ```{r, fig.height=12, fig.width=12}
-manova = manova(as.matrix(D.s[,1:29]) ~ D.s$cluster)
+manova = manova(as.matrix(scale(D.s[,1:29])) ~ D.s$cluster)
+summary(manova, test="Wilks")
 lda1 = candisc(manova)
 summary(lda1)
 ```
@@ -446,13 +447,14 @@ summary(lda1)
 Obie kanoniczne funckje dyskryminacyjne są istotne i tłumaczą zbliżone odsetki wariancji (co oznacza, że obie są tak samo istotne dla rozróżniania pomiędzy skupieniami). Jako, że czasem jeden obraz może być wart więcej niż tysiąc słów (czy liczb), inspekcja korelacji między zmiennymi a funkcjami dyskryminacyjnymi zostanie dokonana w oparciu o graficzną reprezentację modelu:
 
 ```{r, fig.height=12, fig.width=12}
-plot(lda1, cex=.9)
+par(mar=c(4.2,4.2,1,1))
+plot(lda1, cex=.9, scale=6, var.col="gray10", pch=c(16,17,18), prefix="Funkcja dyskryminacyjna", col=c("indianred3", "blue3", "gold2"))
 ```
 
 Warto również spojrzeć na to, jak dużą część zmienności wyników dla funkcji kanonicznych tłumaczy przynależność grupowa. W tym celu wystarczy sprawdzić stosunek korelacyjny $\eta^2$ dla modelu manova, na którym oparta była analiza dyskryminacyjna.
 
 ```{r}
-etasq(manova, partial=FALSE, method="pillai")
+etasq(manova, partial=FALSE, method="wilks")
 ```
 
 Jak widać przynależność do skupieni tłumaczy prawie 64% zmienności w 29-wymiarowej przestrzeni zmiennych, co należy uznać za bardzo dobry wynik. Świadczy to pozytywnie o dokonanej klasyfikacji respondentów i jest dowodem na jej adekwatność wobec rzeczywiście występujących różnic.
@@ -473,6 +475,36 @@ Na koniec warto sprawdzić, jakie są średnie centroidów w zakresie wyników d
 
 ```{r}
 kable(lda1$means)
+```
+
+Jeszcze należy spojrzeć na moc predykcyjną modelu - do tego będzie trzeba posłużyć się pakietem MASS:
+
+```{r}
+lda2 = lda(cluster ~ income + lifestd + sportint + football + civic + tvinfo + tvlowbrow + 
+               tvhighbrow + tvpop + tvcons + moviesepic + movieshigh + movieslight + 
+               bookshigh + bookslow + booksknow + booksfant + pressgen + 
+               pressknow + presscons + presslib + pressspec + musichigh + 
+               musicmodern + musicrock + musicafro + cultcap + lifestab, data=D.s)
+plda2 = predict(object=lda2, newdata=D.s)$posterior
+pred = vector(mode="character", length=dim(plda2)[1])  
+for(i in 1:dim(plda2)[1]) {
+      row = plda2[i, ]
+      ind = which.max(row)[1]
+      pred[i] = colnames(plda2)[ind]
+      }
+pred = as.factor(pred)
+pred = factor(pred, levels(pred)[c(3,2,1)])
+pred = table(D.s$cluster, pred)
+1 - sum(diag(pred)) / sum(pred) # odsetek błędnych klasyfikacji
+
+# Walidacja krzyżowa
+lda3 = lda(cluster ~ income + lifestd + sportint + football + civic + tvinfo + tvlowbrow + 
+               tvhighbrow + tvpop + tvcons + moviesepic + movieshigh + movieslight + 
+               bookshigh + bookslow + booksknow + booksfant + pressgen + 
+               pressknow + presscons + presslib + pressspec + musichigh + 
+               musicmodern + musicrock + musicafro + cultcap + lifestab, data=D.s, CV=T)
+pred2 = table(D.s$cluster, lda3$class)
+1 - sum(diag(pred2)) / sum(pred2) # odsetek błędnych klasyfikacji
 ```
 
 Wyniki można właściwie uznać za doskonale zgodne z przedstawionymi wcześniej interpretacjom. Skupienie pierwsze charakteryzuje się wysokim klasycznym kapitałem kulturowym (ujemne Can1) i niskim natężeniem gustu popularnego (niskie Can2). 
