@@ -215,7 +215,7 @@ Przyrównując pochodną do zera można sprawdzić, gdzie jaka jest optymalny po
 Opisane zależności można przedstawić graficznie:
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6}
-xyplot(resmob ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Mobilizacja zasobów",
+rmsct <- xyplot(resmob ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Mobilizacja zasobów",
        panel = function(x, y) {
              panel.xyplot(x, y)
              panel.loess(x, y, col="red")
@@ -223,6 +223,19 @@ xyplot(resmob ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Mobilizacja zas
              panel.abline(h=mean(y), lwd=.5, lty=2)
              panel.abline(v=1.145091, lwd=1.5, lty=2, col="red")
        })
+
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey90"
+
+l.sc <- update(rmsct, par.settings = my.theme,
+               #panel = panel.smoothScatter
+               #layout = c(3, 2),
+               #between = list(x = 0.3, y = 0.3)
+               )
 ```
 
 Na wykresie zaznaczono poziomą linię średnią dla mobilizacji zasobów oraz czerwoną pionową linią optymalną wartość średniej entropii. Jak widać krzywa równania modelu pokrywa się w znacznym stopniu z krzywą loess, co świadczy o przyzwoitym dopasowaniu modelu do empriycznego trendu danych. Warto jednak zwrócić uwagę, że ewentualna korzyść płynąca z odpowiedniego poziomu różnorodności jest relatywnie mała - grzbiet krzywej równania modelu wznosi się niewiele powyżej średniej dla mobilizacji zasobów. Oznacza to, że ważniejszym efektem różnorodności jest to, że jej zbyt wysoki bądź niski poziom może mieć zdecydowanie negatywny wpływ.
@@ -291,7 +304,7 @@ $$\frac{dY}{dH} = 8,004 - 9,998H$$
 Jako, że czynnik kwadratowy ma ujemny współczynnik, to ramiona paraboli wykresu równania opadają ku dołowi. Oznacza to, że funkcja ma globalne maksimum. Przekształcając pochodną w taki sam sposób jak poprzednio, można sprawdzić, że maksimum występuje dla punktu $H = 0,800$. Poniższy wykres przedstawia graficznie otrzymane wyniki:
 
 ```{r, echo=FALSE, fig.width=6, fig.height=6}
-xyplot(soccont ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Kontakty społeczne",
+scsct <- xyplot(soccont ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Kontakty społeczne",
        panel = function(x, y) {
              panel.xyplot(x, y)
              panel.loess(x, y, col="red")
@@ -299,6 +312,19 @@ xyplot(soccont ~ ent_avg, data=D, xlab="Średnia entropia", ylab="Kontakty społ
              panel.abline(h=mean(y), lwd=.5, lty=2)
              panel.abline(v=0.8, lwd=1.5, lty=2, col="red")
        })
+
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey90"
+
+l.sc <- update(scsct, par.settings = my.theme,
+               #panel = panel.smoothScatter
+               #layout = c(3, 2),
+               #between = list(x = 0.3, y = 0.3)
+               )
 ```
 
 Podobnie jak poprzednio wykres funkcji równania regresji pokrywa się niemalże idealnie z krzywą loess. Co więcej w tym przypadku zakres danych pozwala się ujawnić kwadratowej zależności w większym odrobinę większym stopniu. Wynik jest zatem podobny - istnieje optymalny poziom zróżnicowania środowiska społecznego, który jest optymalny pod względem kapitału społecznego rozumianego jako zbiór kontaktów i znajomości.
@@ -308,8 +334,8 @@ Podobnie jak poprzednio wykres funkcji równania regresji pokrywa się niemalże
 Normalność reszt:
 
 ```{r, fig.width=6, fig.height=6}
-qqPlot(soccont.lm1, ylab="Studentyzowane reszty", xlab="t-kwantyle")
-shapiro.test(soccont.lm1$residuals)
+qqPlot(soccont.lm2, ylab="Studentyzowane reszty", xlab="t-kwantyle")
+shapiro.test(soccont.lm2$residuals)
 ```
 
 Stwierdzono odchylenie rozkładu od normalności, ale wykres kwantylowy sugeruje, że nie jest to odchylenie znaczne.
@@ -317,7 +343,7 @@ Stwierdzono odchylenie rozkładu od normalności, ale wykres kwantylowy sugeruje
 Heteroskedastyczność:
 
 ```{r}
-bptest(soccont.lm1)
+bptest(soccont.lm2)
 ```
 
 Test Breuscha-Pagana wskazuje, że wariancja reszt jest stała.

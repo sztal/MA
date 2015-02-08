@@ -26,7 +26,16 @@ load("../Places/PlaceData.RData") # Dane na poziomie miejsc
 Rozkład popularności - jak widać wydaje się być zbliżony do potęgowego:
 
 ```{r, echo=FALSE}
-histogram(~ Pdat$popularity, xlab="Popularność")
+#trellis.par.set("plot.polygon$col", c("red", "green", "blue"))
+
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey10"
+h1 <- histogram(~ Pdat$popularity, xlab="Popularność")
+h1.gray <- update(h1, par.settings = my.theme)
 ```
 
 Estymacja (metodą Największej Wiarygodności) wykładnika $\alpha$ rozkładu potęgowego oraz jego błędu standardowego (wzór na błąd standardowy za: Fronczak i Fronczak, 2009)
@@ -57,7 +66,7 @@ Wykres:
 x = Pdat$popularity
 xpr = mapPr(x)
 n = length(x)
-xyplot(xpr ~ x, xlab="Popularność (X)", ylab="P(X)",
+log1 <- xyplot(xpr ~ x, xlab="Popularność (X)", ylab="P(X)",
        scales=list(x=list(relation="free", log=10, cex=1),
                    y=list(relation="free", log=10, cex=1)),
        prepanel = function(x, y, subscripts) {
@@ -74,6 +83,14 @@ xyplot(xpr ~ x, xlab="Popularność (X)", ylab="P(X)",
        subscripts = TRUE,
        xscale.components = xscale.components.logpower,
        yscale.components = yscale.components.logpower)
+
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey75"
+log1.gray <- update(log1, par.settings = my.theme)
 ```
 
 Wykres zdaje się świadczyć na korzyść hipotezy. Ostatecznym sprawdzianem będzie test Kołmogorova-Smirnova dopasowania danych empirycznych do teoretycznego rozkładu:

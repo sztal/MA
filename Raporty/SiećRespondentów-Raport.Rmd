@@ -42,7 +42,15 @@ Zapisanie stopni wierzchołków - czyli ilości połączeń poiędzy badanymi i 
 ```{r}
 dd = degree(Gp)
 D$connections = dd
-histogram(dd, xlab="liczba połączeń")
+h1 <- histogram(dd, xlab="Liczba połączeń")
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey10"
+h1.gray <- update(h1, par.settings = my.theme)
+fit = power.law.fit(dd, xmin=1, implementation="plfit")
 ```
 
 Jak widać rozkład jest wyraźnie nie-potęgowy. Wskazuje to na stosunkowo "normalne" właściwości strukturalne tej sieci.
@@ -60,8 +68,9 @@ V(Gp)$label = NA
 # Some cosmetics for edges
 E(Gp)$color = rgb(.3,.3,0,.1)
 lay3 <- layout.kamada.kawai(Gp, coolexp=1.5, niter=1000, area=vcount(Gp)^3.5)
+lay <- layout.fruchterman.reingold(Gp, coolexp=1.5, niter=1000, area=vcount(Gp)^3.5)
 par(mar=c(2,2,2,2))
-plot(Gp, layout=lay3)
+plot(Gp, layout=lay)
 ```
 
 Globalny współczynnik gronowania:
@@ -118,3 +127,12 @@ assortativity.nominal(Gp, type=D$cluster, directed=FALSE) # no correlation
 ```
 
 Jak widać zarówno asortatywność oparta na stopniach wierzchołków jak i przynalezności do skupień kulturowych właściwie nie występuje.
+
+Jednakże warto porównać ten wynik z wartościami występującymi w sieciach o takiej samej podstawowej strukturze (ilość węzłów i krawędzi oraz rozkład stopni wierzchołków), ale losowej strukturze połączeń między węzłami. W tym celu zastosowany zostanie test permutacyjny oparty na losowym przestawianiu wartości w macierzy sąsiedztwa sieci (ale przy zachowaniu jej symetryczności).
+
+```{r}
+# Nieparametryczny przedział ufności dla korelacji międzywęzłowej
+permtest(AM, n=1000, FUN=assortativity.degree, directed=FALSE)
+# Nieparametryczny przedział ufności dla homofilii
+permtest(AM, n=1000, FUN=assortativity.nominal, type=D$cluster, directed=FALSE)
+```
