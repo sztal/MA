@@ -71,6 +71,8 @@ Tab = cbind(Tab, ns)
 
 # Additionaly general attachment to Warsaw is rescaled to range 1 to 5
 D$attgen = rescale(D$attgen, min=1, max=5)
+# and indicators obtained from data reduction to range 1 to 7
+for(i in c(44:67, 69:70)) D[,i] = rescale(D[,i], min=1, max=7)
 
 # Create new dataset with rescaled variables
 D[, quantvar] = D2
