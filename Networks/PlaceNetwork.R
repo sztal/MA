@@ -94,7 +94,7 @@ lay <- layout.fruchterman.reingold(Gp, coolexp=1, niter=1000, area=vcount(Gp)^4)
 lay3 <- layout.kamada.kawai(Gp, coolexp=1.5, niter=1000, area=vcount(Gp)^3.5)
 pdf("Networks/PlaceGraph.pdf")
 par(mar=c(2,2,2,2))
-plot(Gp, layout=lay3)
+plot(Gp, layout=lay)
 dev.off()
 
 # Check the most conncected places
@@ -149,7 +149,13 @@ comm = edge.betweenness.community(Gp, weights=E(Gp)$weights, directed=FALSE)
 Pdat$netcomm = comm$membership
 
 # (Dys)assortativity
-assortativity.degree(Gp) # slightly negative
+d = assortativity.degree(Gp) # slightly negative
+# Permutation test for the correlation
+q = permtest(AM, n=1000, FUN=assortativity.degree, directed=FALSE)
+quantile(q, c(0.05, 0.95))
+shapiro.test(q)
+mean(q)
+sd(q)
 
 # Save the dataset
 save(Pdat, file="Places/PlaceData.RData")

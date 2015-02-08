@@ -19,12 +19,12 @@ library(psych)
 library(igraph)
 library(reshape2)
 library(doBy)
-source("../Places/PlacesHelper.R")
-source("../HelperFunctionsMisc/ComputingMisc.R")
-source("../Networks/NetworkMethods.R")
+source("Places/PlacesHelper.R")
+source("HelperFunctionsMisc/ComputingMisc.R")
+source("Networks/NetworkMethods.R")
 
-load("../Networks/IncidenceMatrix.RData")
-load("../Places/PlaceData.RData")
+load("Networks/IncidenceMatrix.RData")
+load("Places/PlaceData.RData")
 AM = t(AM) %*% AM
 ```
 
@@ -39,7 +39,44 @@ Rozkład stopni wierzchołków:
 ```{r}
 dd = degree(Gp) # maybe it is scale-free?
 Pdat$connections = dd
-histogram(Pdat$connections, xlab="Stopień wierzchołka")
+h1 <- histogram(Pdat$connections, xlab="Stopień wierzchołka")
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey10"
+h1.gray <- update(h1, par.settings = my.theme)
+```
+
+Korelacja między stopniem wierzchołka a jego popularnością:
+
+```{r}
+h2 <- xyplot(connections ~ popularity, data=Pdat[Pdat$connections>0,], 
+             ylab="Stopień wierzchołka", xlab="Popularność",
+             panel = function(x, y, ...) {
+                            panel.xyplot(x, y, ...)
+                            lm1 <- lm(y ~ x)
+                            lm1sum <- summary(lm1)
+                            r2 <- lm1sum$adj.r.squared
+                            panel.abline(a = lm1$coefficients[1], 
+                                         b = lm1$coefficients[2])
+                            panel.text(labels = 
+                                         bquote(italic(R)^2 == 
+                                                  .(format(r2, 
+                                                           digits = 3))),
+                                       x = 50, y = 75)
+                            },
+                          xscale.components = xscale.components.subticks,
+                          yscale.components = yscale.components.subticks,
+                          as.table = TRUE)
+my.theme <- trellis.par.get()
+my.theme$strip.background$col <- "grey80"
+my.theme$plot.symbol$pch <- 16
+my.theme$plot.symbol$size <- 4
+my.theme$plot.symbol$col <- "grey60"
+my.theme$plot.polygon$col <- "grey10"
+h2.gray <- update(h2, par.settings = my.theme)
 ```
 
 Jak widać rozkład jest mocno skośny, ale nie jest pewne czy można mówić o jego potęgowości. Warto przeprowadzić test:
@@ -52,7 +89,8 @@ fit
 Jak widać rozkład nie jest potęgowy. Nie zmienia to jednak faktu, że jest silnie skośny. Co więcej analiza wykresu kwantylowego wskazuje, że w tym przypadku mamy raczej do czynienia z rozkładem lognormalnym:
 
 ```{r}
-qqnorm(log(Pdat$connections+1))
+qqnorm(log(Pdat[Pdat$connections>0,]$connections), main="", ylab="Kwantyle teoretyczne", xlab="Kwantyle empiryczne", cex.lab=.8)
+shapiro.test(log(Pdat[Pdat$connections>0, "connections"]))
 ```
 
 Wizualizacja sieci:
