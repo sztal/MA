@@ -11,10 +11,10 @@ D.back = D # full backup dataset
 
 # First I scale cultural capital in classical understanding
 # variables indicating ccc
-vars = names(D.back)[c(9:11, 21:30, 35:37)]
+vars = names(D.back)[c(5, 9:11, 20:30, 35:37)]
 D = D.back[, vars]
 cc.mca = mjca(D, nd=NA, lambda="adjusted") # adjusted lambda as recommended by Greenacre
-# quite nice almost 68% of variance is retained in the first two dimensions
+# quite nice almost 62.5% of variance is retained in the first two dimensions
 
 cc.ind.coord = projectInd(D, cc.mca) # gets coordinates for respondents
 par(mar=c(4,4,1,1))
@@ -22,11 +22,11 @@ makeMCAplot(D, cc.mca, cex=.6, zoomout=1.2, xlab="Wymiar I", ylab="Wymiar II") #
 
 ### Interpretation ###
 # This is a very good solution - almost all categories are well reprooduced in two-dimensional space - moreover it has a very clear interpretation
-# The first dimension (that reproduces 57.7% of inertia) seems to correspond to the classical definition of cultural capital that is generationally transmitted and is focused around consumption and usage of cultural goods
+# The first dimension (that reproduces 52.5% of inertia) seems to correspond to the classical definition of cultural capital that is generationally transmitted and is focused around consumption and usage of cultural goods
 # The second dimension is just residual and will not be considered in further analyses 
 # So respondens scores will be saved only for the first dimension which may be interpreted as general cultural capital
 
-D.back$cultcap = cc.ind.coord[,1] * (-1) # save and reverse the cultcap scores
+D.back$cultcap = cc.ind.coord[,1] # save the cultural capital scores
 # Check distributions
 histogram(~ cultcap, data=D.back, xlab="Kapitał kulturowy")
 # nice symmetric distributions
@@ -37,7 +37,7 @@ lowerCor(D.back[,48:69])
 
 # One-dimensional plot
 ans = cc.mca$levelnames
-coords = -cc.mca$rowpcoord[,1]
+coords = cc.mca$rowpcoord[,1]
 dotplot(reorder(ans, coords) ~ coords, xlab="Kapitał kulturowy")
 
 
