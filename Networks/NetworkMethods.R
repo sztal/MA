@@ -68,6 +68,6 @@ permtest <- function(AM, n=1000, FUN, ...) {
             statvec[i] = stat
       }
       CI = quantile(statvec, probs = c(.05, .95))
-      return(CI)
+      return(statvec)
 }
       
