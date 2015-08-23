@@ -55,13 +55,13 @@ s = V(Gpp)$size[places]
 V(Gpp)$frame.color[places] = rgb(.7,.5,.2, exp(.05*s) / (1+exp(.05*s)))
 V(Gpp)$color[places] = rgb(.2,.7,0,.5)
 # Popular places - display names
-V(Gpp)$label[popular] = colnames(AM)[popular-231]
+#V(Gpp)$label[popular] = colnames(AM)[popular-231]
 # Some cosmetics for edges
 E(Gpp)$color = rgb(.5,.5,0,.4)
 # Plotting
 lay <- layout.fruchterman.reingold(Gpp, coolexp=1, niter=1000, area=vcount(Gpp)^3)
 pdf("Networks/bigraph.pdf")
-par(mar=c(2,2,2,2))
+par(mar=c(.25,.25,.25,.25))
 plot(Gpp, layout=lay)
 dev.off()
 
