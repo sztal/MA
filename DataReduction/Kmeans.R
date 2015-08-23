@@ -54,6 +54,32 @@ lines(centroids[3,], col="blue", lwd=2)
 for(i in 1:29) {abline(v=i, lty=2, lwd=.7)}
 legend("topright", col=c("black", "red", "blue"), legend=1:3, lty=1, cex=.9)
 
+### Same plot, but nicer - based on lattice engine
+cntr <- as.data.frame.table(centroids)
+names(cntr) <- c("Skupienie", "Zmienna", "Średnia")
+### Polish variables names
+N <- c("Dochód", "Postrzegany standard życia",
+       "Zainteresowanie sportem", "Zainteresowanie piłką nożną",
+       "Aktywność obywatelska", "TV informacyjna",
+       "TV popularna", "TV wysoka", "Główne stacje TV",
+       "Konserwatywne stacje TV", "Kino epickie",
+       "Kino wysokie", "Kino lekkie", "Literatura wysoka",
+       "Literatura lekka", "Literatura informacyjna",
+       "Literatura fantastyczna", "Prasa ogólna",
+       "Prasa informacyjna", "Prasa konserwatywna",
+       "Prasa głównego nurtu", "Prasa specjalistyczna",
+       "Muzyka wysoka", "Muzyka nowoczesna", "Muzyka rockowa",
+       "Muzyka afroamerykańska", "Uczestnictwo w kulturze",
+       "Stabilność materialno-życiowa", "Dobra wysokiej wartości")
+cntr[,2] <- rep(N, each=3)
+dotplot(Zmienna ~ Średnia, data=cntr,
+        groups=factor(Skupienie), type="p",
+        auto.key=list(space="right", points=TRUE,
+        lines = TRUE, title="Skupienie"),
+        scales=list(x=list(rot=90)), cex=.8, pch=c(1,19,17),
+        par.settings=list(superpose.symbol=list(pch=c(1,19,17)))
+        )
+
 # Now the same, but one in one frame
 par(mfrow=c(2,2))
 # all cluster profiles

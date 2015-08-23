@@ -2,7 +2,7 @@
 ### Labeling the dataset ###
 ############################
 library(dplyr)
-source("HelperFunctionsMisc/DataTransHelperFuncs.R")
+source("rawData/DataTransHelperFuncs.R")
 
 D <- read.csv("rawData/raw244.csv")
 N <- read.csv("rawData/Names.csv", header=F)
