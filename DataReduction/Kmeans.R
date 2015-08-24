@@ -72,12 +72,15 @@ N <- c("Dochód", "Postrzegany standard życia",
        "Muzyka afroamerykańska", "Uczestnictwo w kulturze",
        "Stabilność materialno-życiowa", "Dobra wysokiej wartości")
 cntr[,2] <- rep(N, each=3)
+cntr$Zmienna <- factor(cntr$Zmienna, levels = unique(cntr$Zmienna))
+cntr$Skupienie <- rep(c("I", "II", "III"), 29)
 dotplot(Zmienna ~ Średnia, data=cntr,
-        groups=factor(Skupienie), type="p",
+        groups=factor(Skupienie), type="o",
         auto.key=list(space="right", points=TRUE,
         lines = TRUE, title="Skupienie"),
         scales=list(x=list(rot=90)), cex=.8, pch=c(1,19,17),
-        par.settings=list(superpose.symbol=list(pch=c(1,19,17)))
+        par.settings=list(superpose.symbol=list(pch=c(1,19,17)),
+                          superpose.line=list(lty=c(1,2,5), lwd=.8))
         )
 
 # Now the same, but one in one frame
