@@ -104,7 +104,7 @@ getPeoplePlaceMatrix <- function(P) {
       return(AM)
 }
 
-# Get the dominant type of cluster for the places and the entropy of the cluster type distribution
+# Get the dominant type of cluster for the places and the entropy of the cluster type distribution; moreover it gets proportions of each cluster in places
 getDominantClusters <- function(Pdat, D, P) {
       # Pdat is the dataset of place profiles; P is a final place dataset; D is a respondents dataset
       source("HelperFunctionsMisc/ComputingMisc.R")
@@ -116,6 +116,10 @@ getDominantClusters <- function(Pdat, D, P) {
       dcluster = vector(mode="character", length=dim(Pdat)[1]) # dominant clusters
       ent = vector(mode="numeric", length=dim(Pdat)[1]) # absolute entropies
       r_ent = vector(mode="numeric", length=dim(Pdat)[1]) # vector of relative entropies
+      cluster1 = vector(mode="numeric", length=dim(Pdat)[1]) # vector of proportions of the cluster 1 - Wolne Zawody
+      cluster2 = vector(mode="numeric", length=dim(Pdat)[1]) # vector of proportions of the cluster 2 - Studenci
+      cluster3 = vector(mode="numeric", length=dim(Pdat)[1]) # vector of proportions of the cluster 3 - Kulturalnie wycofani
+      
       for(place in places) {
             cluster_dist = vector(mode="character", length=0)
             for(id in D$id) {
@@ -127,14 +131,27 @@ getDominantClusters <- function(Pdat, D, P) {
             mode = domin(cluster_dist) # mode of the cluster type distribution
             H = entropy(cluster_dist, rel = FALSE) # absolute entropy of the distribution
             Hr = entropy(cluster_dist, rel = TRUE) # relative entropy of the distribution
+            ### cluster 1 - Wolne Zawody
+            clust1 = table(cluster_dist)[3]/sum(table(cluster_dist))
+            ### cluster 2 - Studenci
+            clust2 = table(cluster_dist)[2]/sum(table(cluster_dist))
+            ### cluster 3 - Kulturalnie Wycofani
+            clust3 = table(cluster_dist)[1]/sum(table(cluster_dist))
+            
             index = which(places == place) # get the index of the place
             dcluster[index] = mode # assign a dominant cluster to a place
             ent[index] = H # assign absolute entropy to a place
             r_ent[index] = Hr # assing relative entropy to a place
+            cluster1[index] = clust1 # assign cluster 1 proportion to a place
+            cluster2[index] = clust2 # assign cluster 2 proportion to a place
+            cluster3[index] = clust3 # assign cluster 3 proportion to a place
       }
       Pdat$dcluster = as.factor(dcluster)
       Pdat$ent = ent
       Pdat$r_ent = r_ent
+      Pdat$cluster1 = cluster1
+      Pdat$cluster2 = cluster2
+      Pdat$cluster3 = cluster3
       return(Pdat)
 }
 
