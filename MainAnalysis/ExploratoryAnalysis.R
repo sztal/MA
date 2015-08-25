@@ -35,14 +35,21 @@ load("MainData/MainData11.RData")
 ### Set trellis engine to black-and-white mode
 trellis.device(color=FALSE, new=FALSE)
 
+### Due to a mistake one node has to be deleted in this analysis,
+### because it is duplicated
+Pdat.backup <- Pdat
+Pdat <- Pdat[-which(rownames(Pdat) == "ogród_saski"), ]
+
 # Frequency distribution of popularity
 pop_dist = prop.table(table(Pdat$popularity))
 # Denstiy plot for popularity
-D<-densityplot(~ popularity, data=Pdat,
-            plot.points="jitter", auto.key=TRUE) # very power-lawish...
+densityplot(~ popularity, data=Pdat,
+            plot.points="jitter", auto.key=TRUE,
+            xlab="Popularność", ylab="Gęstość prawdopodobieństwa") # very power-lawish...
 ### Formal check of the power-lawness
 fit = power.law.fit(Pdat$popularity, xmin=1, implementation="plfit")
 fit$KS.p # Kolmogorov-Smirnov test proves that the distribution is indeed power-law
+summary(Pdat$popularity)
 
 ### Most popular places ###
 ### First I store names of places as a variables to facilitate use of the dplyr package
@@ -84,7 +91,7 @@ arrange(Pdat, desc(popularity))[c("popularity", "name")] %>% head(n=10)
 ### Now we will look how social heterogeneity of places 
 ### (entropy of visitors' clusters distribution) is related to popularity
 ### Places with 5 or more visitors
-stripplot(ent ~ factor(popularity), data=filter(Pdat, popularity >= 5),
+xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 5),
           jitter.data=TRUE, alpha=.7, pch=1,
           panel = function(x, y) {
             panel.stripplot(x, y)
@@ -92,7 +99,30 @@ stripplot(ent ~ factor(popularity), data=filter(Pdat, popularity >= 5),
             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(ent)),
                          col = "blue")
             })
+
+### Names of places
+n10 <- c("Grawitacja i Jaś i Małgosia", "Pawilony", "Plan B", "Pole Mokotowskie",
+         "Kino Muranów", "BUW", "CH Arkadia", "Stare Miasto", "Bulwary Wiślane",
+         "Kinoteka", "Las Kabacki", "CH Złote Tarasy", "CH Galeria Mokotów",
+         "Plaża nad Wisłą", "Krakowskie Przedmieście i Nowy Świat", "Łazienki",
+         "Nad Wisłą", "Kafefajka", "Kępa Potocka", "Klub 55", "Cafe Kulturalna",
+         "Park Skaryszewski", "Znajomi Znajomych", "Temat Rzeka", "Państwomiasto",
+         "Park Szczęśliwicki", "Klub Hybrydy", "Ogród Saski", "Klub Park",
+         "Hula Kula")
+n15 <- c("Pawilony", "Plan B", "BUW", "CH Arkadia", "Stare Miasto",
+         "Bulwary Wiślane", "CH Złote Tarasy", "Plaża nad Wisłą",
+         "Krakowskie Przedmieście i Nowy Świat", "Łazienki", "Nad Wisłą",
+         "Park Skaryszewski", "Temat Rzeka")
+
 ### Places with 10 or more visitors
+pos <- rep(4, 30)
+pos[4] <- 2
+pos[12] <- 1
+pos[13] <- 3
+pos[28] <- 3
+pos[9] <- 1
+pos[c(14, 17, 3)] <- 3
+pos[c(16,8,6)] <- 1
 xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 10),
           jitter.data=TRUE, alpha=.7, pch=1,
           panel = function(x, y, ...) {
@@ -102,8 +132,8 @@ xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 10),
                              col = "blue")
                 panel.text(x = filter(Pdat, popularity >= 10)$popularity,
                            y = filter(Pdat, popularity >= 10)$ent,
-                           labels = filter(Pdat, popularity >= 10)$name,
-                           pos=1, cex=.9, aplha=.7)
+                           labels = n10,
+                           pos=pos, cex=.8, alpha=.9)
           })
 ### Places with 15 or more visitors
 xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 15),
@@ -172,10 +202,6 @@ xyplot(soccont ~ ent, data=filter(Pdat, popularity >= 5),
              panel.loess(x, y, col="red", lty=2)
              panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(soccont)),
                           col = "blue")
-#              panel.text(x = filter(Pdat, popularity >= 15)$ent,
-#                         y = filter(Pdat, popularity >= 15)$soccont,
-#                         labels = filter(Pdat, popularity >= 15)$name,
-#                         pos=1, cex=.8)
        })
 ### RESMOB
 ### 5+ visitors
@@ -184,12 +210,7 @@ xyplot(resmob ~ ent, data=filter(Pdat, popularity >= 5),
        panel = function(x, y, ...) {
              panel.xyplot(x, y, ...)
              panel.loess(x, y, col="red", lty=2)
-             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(resmob)),
-                          col = "blue")
-             #              panel.text(x = filter(Pdat, popularity >= 15)$ent,
-             #                         y = filter(Pdat, popularity >= 15)$soccont,
-             #                         labels = filter(Pdat, popularity >= 15)$name,
-             #                         pos=1, cex=.8)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(resmob)), col = "blue")
        })
 ### Clearly there is no pattern
 ###   - more diverse places do not attract more 'socially embedded' people
@@ -228,3 +249,123 @@ summary(lm(soccont ~ dcluster, data = filter(Pdat, popularity >= 5)))
 summarise(group_by(
       filter(Pdat, popularity >= 5), dcluster), mean(resmob))
 summary(lm(resmob ~ dcluster, data = filter(Pdat, popularity >= 5)))
+
+
+### Now we look and correlation between the cluster proportions and popularity as well as social capital
+
+### Popularity
+### cluster I
+xyplot(popularity ~ cluster1, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(popularity)),
+                          col = "blue")
+       })
+### no association
+
+### cluster II
+xyplot(popularity ~ cluster2, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(popularity)),
+                          col = "blue")
+       })
+### no association
+
+### cluster III
+xyplot(popularity ~ cluster3, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(popularity)),
+                          col = "blue")
+       })
+### no association
+
+### Social capital
+### RESMOB
+### cluster I
+xyplot(resmob ~ cluster1, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(resmob)),
+                          col = "blue")
+       })
+### no association
+
+### cluster II
+xyplot(resmob ~ cluster2, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(resmob)),
+                          col = "blue")
+       })
+### no association
+
+### cluster III
+xyplot(resmob ~ cluster3, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(resmob)),
+                          col = "blue")
+       })
+### also nothing really interesting...
+
+### SOCCONT
+### cluster I
+xyplot(soccont ~ cluster1, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(soccont)),
+                          col = "blue")
+       })
+### there seems to be some kind of maybe quadratic association
+
+### cluster II
+xyplot(soccont ~ cluster2, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(soccont)),
+                          col = "blue")
+       })
+### no association
+
+### cluster III
+xyplot(soccont ~ cluster3, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.loess(x, y, col="red", lty=2)
+             panel.abline(h = filter(Pdat, popularity >= 5) %>% summarise(mean(soccont)), col = "blue")
+       })
+### also nothing really interesting...
+
+### So in general there may be something going on in places with an optimal number of visitors from the cluster I.
+
+### Lastly, I prepare a map of places in a space of their visitors in terms of their cluster assignments to see which places are visited by which types of people.
+### Sine three-categorical distribution has only two degrees of freedom I can make such a map in only two dimensions without any loss of information. Thus, I will use only cluster I and cluster II proportions.
+xyplot(cluster1 ~ cluster2, data=filter(Pdat, popularity >= 5),
+       jitter.data=TRUE, alpha=.7, pch=0,
+       panel = function(x, y, ...) {
+             panel.xyplot(x, y, ...)
+             panel.text(x = filter(Pdat, popularity >= 10)$cluster2,
+                        y = filter(Pdat, popularity >= 10)$cluster1,
+                        labels = filter(Pdat, popularity >= 10)$name,
+                        pos=1, cex=.8)
+             })
+
