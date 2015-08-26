@@ -15,6 +15,7 @@ library(lattice)
 library(latticeExtra)
 library(poweRlaw)
 library(dplyr)
+library(xtable)
 source("HelperFunctionsMisc/ComputingMisc.R")
 source("Networks/NetworkMethods.R")
 
@@ -122,14 +123,17 @@ pos[13] <- 3
 pos[28] <- 3
 pos[9] <- 1
 pos[c(14, 17, 3)] <- 3
-pos[c(16,8,6)] <- 1
-xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 10),
-          jitter.data=TRUE, alpha=.7, pch=1,
+pos[c(16)] <- 1
+pos[c(20,18,29)] <- 2
+pos[6] <- 1
+xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 5),
+        jitter.data=TRUE, alpha=.7, pch=1, col="blue",
+        xlab="Popularność", ylab="Entropia",
           panel = function(x, y, ...) {
                 panel.xyplot(x, y, ...)
                 panel.loess(x, y, col="red", lty=2)
-                panel.abline(h = filter(Pdat, popularity >= 10) %>% summarise(mean(ent)),
-                             col = "blue")
+                panel.abline(h = entropy(D$cluster), lty=2, lwd=2,
+                             alpha=.5, col="blue")
                 panel.text(x = filter(Pdat, popularity >= 10)$popularity,
                            y = filter(Pdat, popularity >= 10)$ent,
                            labels = n10,
@@ -155,28 +159,28 @@ filter(Pdat, popularity >= 10)[, c("ent", "name", "popularity")] %>% arrange(des
 ### Entropy of total cluster distribution in the respondent dataset (main dataset)
 entropy(D$cluster)
 ### Average entropy of places:
-### 5 or more visitors (83 places)
-filter(Pdat, popularity >= 5) %>% summarise(mean(ent))
+### 5 or more visitors (82 places)
+filter(Pdat, popularity >= 5) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 5)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
-### 10 or more visitors (31 places)
-filter(Pdat, popularity >= 10) %>% summarise(mean(ent))
+### 10 or more visitors (30 places)
+filter(Pdat, popularity >= 10) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 10)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
 ### 15 or more visitors (15 places)
-filter(Pdat, popularity >= 15) %>% summarise(mean(ent))
+filter(Pdat, popularity >= 15) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 15)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
 ### 20 or more visitors (12 places)
-filter(Pdat, popularity >= 20) %>% summarise(mean(ent))
+filter(Pdat, popularity >= 20) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 20)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
 ### 30 or more visitors (6 places)
-filter(Pdat, popularity >= 30) %>% summarise(mean(ent))
+filter(Pdat, popularity >= 30) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 30)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
 ### 40 or more visitors (2 places)
-filter(Pdat, popularity >= 40) %>% summarise(mean(ent))
+filter(Pdat, popularity >= 40) %>% summarise(mean(ent)) - entropy(D$cluster)
 t.test(filter(Pdat, popularity >= 40)[, "ent"],
        mu = entropy(D$cluster), alternative="less")
 
@@ -359,13 +363,19 @@ xyplot(soccont ~ cluster3, data=filter(Pdat, popularity >= 5),
 
 ### Lastly, I prepare a map of places in a space of their visitors in terms of their cluster assignments to see which places are visited by which types of people.
 ### Sine three-categorical distribution has only two degrees of freedom I can make such a map in only two dimensions without any loss of information. Thus, I will use only cluster I and cluster II proportions.
+pos=rep(1,30)
+pos[9] <- 2
+pos[17] <- 4
+pos[c(2,7,12)] <- 2
+pos[24] <- 3
 xyplot(cluster1 ~ cluster2, data=filter(Pdat, popularity >= 5),
-       jitter.data=TRUE, alpha=.7, pch=0,
+       jitter.data=TRUE, alpha=.7, pch=1, col="blue",
+       xlab="Studenci/Dzieci zamożnej klasy średniej",
+       ylab="Wolne Zawody",
        panel = function(x, y, ...) {
              panel.xyplot(x, y, ...)
              panel.text(x = filter(Pdat, popularity >= 10)$cluster2,
                         y = filter(Pdat, popularity >= 10)$cluster1,
-                        labels = filter(Pdat, popularity >= 10)$name,
-                        pos=1, cex=.8)
+                        labels = n10,
+                        pos=pos, cex=.8)
              })
-
