@@ -379,3 +379,17 @@ xyplot(cluster1 ~ cluster2, data=filter(Pdat, popularity >= 5),
                         labels = n10,
                         pos=pos, cex=.8)
              })
+
+### Quick and dirty loop transforming data for all 82 places with popularity >= 5 into pseud latex table form
+for(i in 1:41) {
+      t1 = as.character(format(Q[i, ], digits=2, nsmall=2, decimal.mark=","))
+      t2 = as.character(format(Q[i+41, ], digits=2, nsmall=2, decimal.mark=","))
+      t = append(t1, t2)
+      latex = t[1]
+      for(j in 2:length(t)) {
+            latex = paste(latex, t[j], sep=" & ")
+      }
+      latex = paste(latex, "\\\\")
+      latex = gsub("_", "-", latex)
+      cat(paste(latex, "\n"))
+}
