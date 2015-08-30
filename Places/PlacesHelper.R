@@ -196,7 +196,7 @@ getFullPlaceInfo <- function(Pdat, D, P) {
 
 # This function computes various social space homogeneity indices based on place entropy distributions for individuals. These indices are:
 # 1) sum of entropies; 2) average entropy; 3) maximal entropy; 4) minimal entropy
-heterogeneityCoefs <- function(Pdat, D, P) {
+heterogeneityCoefs <- function(Pdat, D, P, threshold=0) {
       source("HelperFunctionsMisc/ComputingMisc.R")
       require(dplyr)
       D = arrange(D, id)
@@ -217,6 +217,7 @@ heterogeneityCoefs <- function(Pdat, D, P) {
             # this is due to the fact that popular places should have higheer weights, but at the same time they should not completely dominate other places
             weights = vector(mode="numeric", length=0)
             for(place in places) {
+                  if(Pdat[place, "popularity"] < threshold) next
                   if(place %in% P[P$id==id, ]) {
                         ent_vec = append(ent_vec, Pdat[place, "ent"])
                         weights = append(weights, sqrt(Pdat[place, 1]))

@@ -26,6 +26,7 @@ xyplot(value ~ ent_avg | variable, data=E,
              panel.loess(x, y, col="red")
        }) # there are perhaps some outliers;
 
+
 # Check correlation of ent_avg with places to see if it is important to control for it (and also check correlations with attachment scales)
 lowerCor(D[,c(2:3, 12, 4:7)]) # no strong correlations
 
@@ -40,7 +41,7 @@ histogram(~ ent_avg, data=D, xlab="Average entropy") # also quite ok
 
 # MODELS for resmob
 # Bivariate model
-resmob.lm1 = lm(resmob ~ ent_avg , data=D) # 2.5% of variance explained
+resmob.lm1 = lm(resmob ~ ent_avg + cluster, data=D) # 2.5% of variance explained
 # Some diagnostics
 shapiro.test(resmob.lm1$residuals) # not normal distribution of residuals; something is wrong
 bptest(resmob.lm1) # ok, the variance is homoscedastic; that is good
