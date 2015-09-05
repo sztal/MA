@@ -93,7 +93,7 @@ arrange(Pdat, desc(popularity))[c("popularity", "name")] %>% head(n=10)
 ### (entropy of visitors' clusters distribution) is related to popularity
 ### Places with 5 or more visitors
 xyplot(ent ~ popularity, data=filter(Pdat, popularity >= 5),
-          jitter.data=TRUE, alpha=.7, pch=1,
+          jitter.data=TRUE, alpha=.9, pch=19, col="gray",
           panel = function(x, y) {
             panel.stripplot(x, y)
             panel.loess(x, y, col="red", lty=2)
