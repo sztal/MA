@@ -2,7 +2,6 @@
 ### 3rd HYPOTHESIS ###
 ######################
 ### This script tests the third hypothesis
-### that is the that claims that abstract entropy is a worse predictor than in-place average entropy
 
 ### Load packages
 library(car)
@@ -23,42 +22,43 @@ library(robustbase)
 source("HelperFunctionsMisc/ComputingMisc.R")
 source("Places/PlacesHelper.R")
 
-# Load the data
-load("Places/PlaceData.RData") # load the place data
-load("Places/Places.RData") # load the place indications dataset
+# Load data
 load("MainData/MainData11.RData") # main dataset
-load("Networks/IncidenceMatrix.RData")
 D.back = D # backup dataset
-D <- D[!is.na(D$ent_avg), ]
-D$attdisccent <- D$attdiscovered - mean(D$attdiscovered)
-
-### Attachment scales
-summary(D[, grep("att", names(D), perl=TRUE)])
-corr.test(D[, grep("resmob|soccont|att", names(D), perl=TRUE)])
-
-### Only general scale and discovered scale have at least some correlation with the RESMOB and SOCCONT scales. However, attgen scale is too large extend truncated and should not be used. Thus, the discovered scale will be used.
-
-##### RESMOB #####
-##### Models #####
-set.seed(171)
-resmob.rqm <- lmrob(resmob ~ ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
-### Extended model
-resmob.rqmex <- lmrob(resmob ~ (ent_avg + I((ent_avg-mean(ent_avg))^2))*attdisccent, data=D)
-resmob.rqmatt <- lmrob(resmob ~ ent_avg + I((ent_avg-mean(ent_avg))^2) + attdisccent, data=D)
-Anova(resmob.rqmex)
-anova(resmob.rqmex, resmob.rqmatt)
+D <- D[!is.na(D$ent_avg), ] # trim data to respondents with entropy indicators only
 
 
-### Attachment has no interaction with the RESMOB scale
+# Part A
+active.qm <- lm(attdiscovered ~ ent_avg + I((ent_avg - mean(ent_avg))^2), data=D)
+# Diagnostics
+gvlma(active.qm)  # Nice! Model is rather OK
+qqPlot(active.qm$residuals)
+shapiro.test(active.qm$residuals)
+# And the model is strong! 10% of variance is retained!
+# So the A part of the hypothesis is confirmed!
+
+# Additional analysis --- partialing out the influence of social capital
+active.qmex <- lm(attdiscovered ~ resmob + soccont + ent_avg + I((ent_avg - mean(ent_avg))^2), data=D)
+# Diagnostics
+gvlma(active.qmex)  # Nice again!
+qqPlot(active.qmex$residuals)
+shapiro.test(active.qmex$residuals)
+
+# So the part A is ultimately confirmed!!! Hurray!
 
 
-##### SOCCONT #####
-##### Models  #####
-soccont.rqm <- lmrob(soccont ~ ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
-### Extended model
-soccont.rqmex <- lmrob(soccont ~ (ent_avg + I((ent_avg-mean(ent_avg))^2))*attdisccent, data=D)
-soccont.rqmatt <- lmrob(soccont ~ ent_avg + I((ent_avg-mean(ent_avg))^2) + attdisccent, data=D)
-Anova(soccont.rqmex)
-anova(soccont.rqmatt, soccont.rqmex)
+# Part B
+everyday.qm <- lm(attgiven ~ ent_avg + I((ent_avg - mean(ent_avg))^2), data=D)
+gvlma(everyday.qm)
+qqPlot(everyday.qm$residuals)
+shapiro.test(everyday.qm$residuals) # not good ...
 
-### Attachment has no interaction with the RESMOB scale
+# Part C
+noatt.qm <- lm(attnoatt ~ ent_avg + I((ent_avg - mean(ent_avg))^2), data=D)
+gvlma(noatt.qm)
+qqPlot(noatt.qm)
+shapiro.test(noatt.qm$residuals)    # Great!
+# And the C part is confirmed too ... although the strength of the relationship is very weak.
+
+
+### Visualization
