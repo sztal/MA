@@ -61,7 +61,7 @@ E(Gpp)$color = rgb(.5,.5,0,.4)
 # Plotting
 lay <- layout.fruchterman.reingold(Gpp, coolexp=1, niter=1000, area=vcount(Gpp)^3)
 pdf("Networks/bigraph.pdf")
-par(mar=c(.25,.25,.25,.25))
+par(mar=c(.0,.0,.0,.0))
 plot(Gpp, layout=lay)
 dev.off()
 

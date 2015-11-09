@@ -21,6 +21,8 @@ library(outliers)
 library(DMwR)
 library(gvlma)
 library(robustbase)
+library(MVN)
+library(gplots)
 source("HelperFunctionsMisc/ComputingMisc.R")
 source("Places/PlacesHelper.R")
 
@@ -265,9 +267,9 @@ xyplot(soccont ~ ent_avg, data=D, alpha=.7, col="black", pch=1,
 lowerCor(D[, c("resmob", "soccont", "ent_avg", "places")])
 ### RESMOB
 set.seed(909)
-resmob.rqmex <- lmrob(resmob ~ places + cluster + ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
-resmob.rqmexbase <- lmrob(resmob ~ places + cluster, data=D)
-resmob.rqmexlin <- lmrob(resmob ~ places + cluster + ent_avg, data=D)
+resmob.rqmex <- lmrob(resmob ~ cluster + ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
+resmob.rqmexbase <- lmrob(resmob ~ cluster, data=D)
+resmob.rqmexlin <- lmrob(resmob ~ cluster + ent_avg, data=D)
 Anova(resmob.rqmex)
 anova(resmob.rqmex, resmob.rqmexlin)
 anova(resmob.rqmex, resmob.rqmexbase)
@@ -276,14 +278,27 @@ vif(resmob.rqmex)
 
 ### SOCCONT
 set.seed(9090)
-soccont.rqmex <- lmrob(soccont ~ places + cluster + ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
-soccont.rqmexbase <- lmrob(soccont ~ places + cluster, data=D)
-soccont.rqmexlin <- lmrob(soccont ~ places + cluster + ent_avg, data=D)
+soccont.rqmex <- lmrob(soccont ~ cluster + ent_avg + I((ent_avg-mean(ent_avg))^2), data=D)
+soccont.rqmexbase <- lmrob(soccont ~ cluster, data=D)
+soccont.rqmexlin <- lmrob(soccont ~ cluster + ent_avg, data=D)
 Anova(soccont.rqmex)
 anova(soccont.rqmex, soccont.rqmexlin)
 anova(soccont.rqmex, soccont.rqmexbase)
 anova(soccont.rqmexlin, soccont.rqmexbase)
 vif(soccont.rqmex)
+
+
+### I check differences in terms of social capital between the clusters with forward difference contrasts
+fdc.mat<- matrix(c(2/3,-1/3,-1/3,1/3,1/3,-2/3), ncol=2)
+D$cluster.fdc <- D$cluster
+# RESMOB
+contrasts(D$cluster.fdc) <- fdc.mat
+resmob.aov <- lm(resmob ~ cluster.fdc, data=D)
+# SOCCONT
+soccont.aov <- lm(soccont ~ cluster.fdc, data=D)
+# Means and stddeva (and entropies)
+summaryBy(ent_avg + resmob + soccont ~ cluster, data=D, FUN=c(mean, sd, length))
+
 
 
 ### Difference between the maxima
@@ -316,3 +331,26 @@ for(i in 1:n) {
 ### 95% CI for the difference
 quantile(rm.maxima - sc.maxima, probs=c(.025,.975), na.rm=TRUE)
 mean(rm.maxima - sc.maxima, na.rm=TRUE)
+
+
+### JUST OUT OF CURIOSITY: Hypothesis test using multiple multivariate regression ###
+# Basic model (not extended); Robust regression is not implemented yet ... so I stick to the OLS
+# Prepraring data
+Y <- cbind(D$resmob, D$soccont)
+ent <- D$ent_avg
+entsq <- (D$ent_avg - mean(D$ent_avg))^2
+scmv.lm <- lm(Y ~ ent + entsq)      # nice model
+
+# Diagnostics
+hist2d(scmv.lm$residuals, nbins=8, same.scale=TRUE)
+mardiaTest(scmv.lm$residuals, qqplot=TRUE)
+
+# Extended model, just to be sure
+# Preparing data
+clust <- D$cluster
+places <- D$places
+scmv.lmex <- lm(Y ~ clust + places + ent + entsq)     # sadly quadratic factor disappears :(
+
+# Diagnostics
+hist2d(scmv.lmex$residuals, nbins=8, same.scale=TRUE)
+mardiaTest(scmv.lmex$residuals, qqplot=TRUE)

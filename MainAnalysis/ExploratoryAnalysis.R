@@ -16,6 +16,7 @@ library(latticeExtra)
 library(poweRlaw)
 library(dplyr)
 library(xtable)
+library(psych)
 source("HelperFunctionsMisc/ComputingMisc.R")
 source("Networks/NetworkMethods.R")
 
@@ -380,7 +381,12 @@ xyplot(cluster1 ~ cluster2, data=filter(Pdat, popularity >= 5),
                         pos=pos, cex=.8)
              })
 
-### Quick and dirty loop transforming data for all 82 places with popularity >= 5 into pseud latex table form
+### Correlations between cluster magnitudes and average social capital and place attachment
+corr.test(filter(Pdat, popularity >= 5)[, c("cluster1", "soccont", "resmob", "attgiven", "attdiscovered", "attnoatt")])
+corr.test(filter(Pdat, popularity >= 5)[, c("cluster2", "soccont", "resmob", "attgiven", "attdiscovered", "attnoatt")])
+corr.test(filter(Pdat, popularity >= 5)[, c("cluster3", "soccont", "resmob", "attgiven", "attdiscovered", "attnoatt")])
+
+### Quick and dirty loop transforming data for all 82 places with popularity >= 5 into pseudo-latex table form
 for(i in 1:41) {
       t1 = as.character(format(Q[i, ], digits=2, nsmall=2, decimal.mark=","))
       t2 = as.character(format(Q[i+41, ], digits=2, nsmall=2, decimal.mark=","))
